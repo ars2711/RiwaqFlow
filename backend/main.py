@@ -1383,99 +1383,98 @@ def list_messages(connection_id: str, db: Session = Depends(get_db)):
         models.SocialMessage.connection_id == connection_id
     ).order_by(models.SocialMessage.created_at.asc()).all()
 
- 
- @ a p p . w e b s o c k e t ( ' / w s / m a p / { e v e n t _ i d } ' ) 
- 
- a s y n c   d e f   w e b s o c k e t _ m a p ( w e b s o c k e t :   W e b S o c k e t ,   e v e n t _ i d :   i n t ) : 
- 
-         a w a i t   m a n a g e r . c o n n e c t _ m a p ( w e b s o c k e t ,   e v e n t _ i d ) 
- 
-         t r y : 
- 
-                 w h i l e   T r u e : 
- 
-                         d a t a   =   a w a i t   w e b s o c k e t . r e c e i v e _ t e x t ( ) 
- 
-         e x c e p t   W e b S o c k e t D i s c o n n e c t : 
- 
-                 m a n a g e r . d i s c o n n e c t _ m a p ( w e b s o c k e t ,   e v e n t _ i d ) 
- 
- @ a p p . g e t ( ' / w a l l e t / a p p l e / { t i c k e t _ i d } ' ) 
- 
- d e f   g e n e r a t e _ a p p l e _ w a l l e t _ p a s s ( t i c k e t _ i d :   i n t ,   d b :   S e s s i o n   =   D e p e n d s ( g e t _ d b ) ) : 
- 
-         t i c k e t   =   d b . q u e r y ( m o d e l s . T i c k e t ) . f i l t e r ( m o d e l s . T i c k e t . i d   = =   t i c k e t _ i d ) . f i r s t ( ) 
- 
-         i f   n o t   t i c k e t : 
- 
-                 r a i s e   H T T P E x c e p t i o n ( s t a t u s _ c o d e = 4 0 4 ,   d e t a i l = ' T i c k e t   n o t   f o u n d ' ) 
- 
-         
- 
-         #   S i m u l a t e d   . p k p a s s   b i n a r y   g e n e r a t i o n   f o r   A p p l e   W a l l e t 
- 
-         d u m m y _ p k p a s s _ c o n t e n t   =   b ' P K P A S S _ B I N A R Y _ D A T A _ S T U B ' 
- 
-         
- 
-         r e t u r n   R e s p o n s e ( 
- 
-                 c o n t e n t = d u m m y _ p k p a s s _ c o n t e n t , 
- 
-                 m e d i a _ t y p e = ' a p p l i c a t i o n / v n d . a p p l e . p k p a s s ' , 
- 
-                 h e a d e r s = { ' C o n t e n t - D i s p o s i t i o n ' :   f ' a t t a c h m e n t ;   f i l e n a m e = \ 
- 
- t i c k e t _ 
- 
- \ ' } 
- 
-         ) 
- 
- 
- 
- @ a p p . g e t ( ' / w a l l e t / g o o g l e / { t i c k e t _ i d } ' ) 
- 
- d e f   g e n e r a t e _ g o o g l e _ w a l l e t _ j w t ( t i c k e t _ i d :   i n t ,   d b :   S e s s i o n   =   D e p e n d s ( g e t _ d b ) ) : 
- 
-         t i c k e t   =   d b . q u e r y ( m o d e l s . T i c k e t ) . f i l t e r ( m o d e l s . T i c k e t . i d   = =   t i c k e t _ i d ) . f i r s t ( ) 
- 
-         i f   n o t   t i c k e t : 
- 
-                 r a i s e   H T T P E x c e p t i o n ( s t a t u s _ c o d e = 4 0 4 ,   d e t a i l = ' T i c k e t   n o t   f o u n d ' ) 
- 
-         
- 
-         #   S i m u l a t e d   J W T   G e n e r a t i o n   f o r   G o o g l e   W a l l e t   \ 
- 
- S a v e 
- 
- t o 
- 
- G o o g l e 
- 
- P a y \   l i n k 
- 
-         d u m m y _ j w t   =   ' e y J h b G c i O i J I U z I 1 N i I s I n R 5 c C I . . . ' 
- 
-         r e t u r n   { ' s t a t u s ' :   ' s u c c e s s ' ,   ' g o o g l e W a l l e t U r l ' :   f ' h t t p s : / / p a y . g o o g l e . c o m / g p / v / s a v e / { d u m m y _ j w t } ' } 
- 
- 
- 
- f r o m   a i _ a g e n t   i m p o r t   C h a t R e q u e s t ,   C h a t R e s p o n s e ,   g e n e r a t e _ a i _ r e s p o n s e 
- 
- @ a p p . p o s t ( ' / a p i / c h a t ' ,   r e s p o n s e _ m o d e l = C h a t R e s p o n s e ) 
- 
- a s y n c   d e f   c h a t _ w i t h _ a g e n t ( r e q :   C h a t R e q u e s t ) : 
- 
-         #   S i m u l a t e d   l a t e n c y   f o r   A I   p r o c e s s i n g 
- 
-         i m p o r t   a s y n c i o 
- 
-         a w a i t   a s y n c i o . s l e e p ( 1 ) 
- 
-         r e p l y   =   g e n e r a t e _ a i _ r e s p o n s e ( r e q . m e s s a g e ) 
- 
-         r e t u r n   { ' r e p l y ' :   r e p l y } 
- 
- 
+
+@app.websocket('/ws/map/{event_id}')
+
+async def websocket_map(websocket: WebSocket, event_id: int):
+
+    await manager.connect_map(websocket, event_id)
+
+    try:
+
+        while True:
+
+            data = await websocket.receive_text()
+
+    except WebSocketDisconnect:
+
+        manager.disconnect_map(websocket, event_id)
+
+@app.get('/wallet/apple/{ticket_id}')
+
+def generate_apple_wallet_pass(ticket_id: int, db: Session = Depends(get_db)):
+
+    ticket = db.query(models.Ticket).filter(models.Ticket.id == ticket_id).first()
+
+    if not ticket:
+
+        raise HTTPException(status_code=404, detail='Ticket not found')
+
+    
+
+    # Simulated .pkpass binary generation for Apple Wallet
+
+    dummy_pkpass_content = b'PKPASS_BINARY_DATA_STUB'
+
+    
+
+    return Response(
+
+        content=dummy_pkpass_content,
+
+        media_type='application/vnd.apple.pkpass',
+
+        headers={'Content-Disposition': f'attachment; filename=\
+
+ticket_
+
+\'}
+
+    )
+
+
+
+@app.get('/wallet/google/{ticket_id}')
+
+def generate_google_wallet_jwt(ticket_id: int, db: Session = Depends(get_db)):
+
+    ticket = db.query(models.Ticket).filter(models.Ticket.id == ticket_id).first()
+
+    if not ticket:
+
+        raise HTTPException(status_code=404, detail='Ticket not found')
+
+    
+
+    # Simulated JWT Generation for Google Wallet \
+
+Save
+
+to
+
+Google
+
+Pay\ link
+
+    dummy_jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI...'
+
+    return {'status': 'success', 'googleWalletUrl': f'https://pay.google.com/gp/v/save/{dummy_jwt}'}
+
+
+
+from ai_agent import ChatRequest, ChatResponse, generate_ai_response
+
+@app.post('/api/chat', response_model=ChatResponse)
+
+async def chat_with_agent(req: ChatRequest):
+
+    # Simulated latency for AI processing
+
+    import asyncio
+
+    await asyncio.sleep(1)
+
+    reply = generate_ai_response(req.message)
+
+    return {'reply': reply}
+
