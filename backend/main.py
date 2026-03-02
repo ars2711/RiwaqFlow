@@ -22,6 +22,7 @@ import json
 import models
 import schemas
 from database import engine, get_db
+from wallet_service import generate_apple_pkpass, generate_google_wallet_jwt
 
 load_dotenv()
 
@@ -653,21 +654,61 @@ def list_scanner_devices(
     )
 
 
-@app.get("/tickets/{ticket_id}/wallet-links", response_model=schemas.WalletLinksResponse)
-def get_wallet_links(ticket_id: str, db: Session = Depends(get_db)):
+@app.get("/wallet/download/apple/{ticket_id}")
+def download_apple_pkpass(ticket_id: str, db: Session = Depends(get_db)):
+    """Stream a .pkpass bundle for the given ticket."""
     ticket = db.query(models.Ticket).filter(models.Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    apple_wallet_url = f"https://wallet.yourdomain.com/apple/{ticket.id}.pkpass"
-    google_wallet_url = f"https://wallet.yourdomain.com/google/save/{ticket.id}"
-    samsung_wallet_url = f"https://wallet.yourdomain.com/samsung/{ticket.id}"
+    event = db.query(models.Event).filter(models.Event.id == ticket.event_id).first()
+    event_name = event.name if event else "Event"
+
+    pkpass_bytes = generate_apple_pkpass(ticket_id=ticket.id, event_name=event_name)
+
+    safe_name = event_name.replace(" ", "_")[:30]
+    return StreamingResponse(
+        io.BytesIO(pkpass_bytes),
+        media_type="application/vnd.apple.pkpass",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}_{ticket_id[:8]}.pkpass"',
+            "Content-Length": str(len(pkpass_bytes)),
+        },
+    )
+
+
+@app.get("/tickets/{ticket_id}/wallet-links", response_model=schemas.WalletLinksResponse)
+def get_wallet_links(ticket_id: str, request_url: str = "", db: Session = Depends(get_db)):
+    ticket = db.query(models.Ticket).filter(models.Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    event = db.query(models.Event).filter(models.Event.id == ticket.event_id).first()
+    event_name = event.name if event else "Event"
+    event_date = event.starts_at.isoformat() if event and event.starts_at else ""
+
+    # Apple: point to the backend download endpoint (served via your API base URL)
+    apple_wallet_url = f"/wallet/download/apple/{ticket.id}"
+
+    # Google: generate a signed (or demo-signed) JWT and build the save-to-wallet URL
+    google_jwt = generate_google_wallet_jwt(
+        ticket_id=ticket.id,
+        event_name=event_name,
+        event_date=event_date,
+    )
+    if google_jwt == "DUMMY_JWT_BECAUSE_NO_CREDENTIALS_PROVIDED":
+        google_wallet_url = None  # disabled until real credentials are configured
+    else:
+        google_wallet_url = f"https://pay.google.com/gp/v/save/{google_jwt}"
+
+    # Samsung: stub until Samsung Wallet Partnership ID is configured
+    samsung_wallet_url = None
 
     return schemas.WalletLinksResponse(
         apple_wallet_url=apple_wallet_url,
         google_wallet_url=google_wallet_url,
         samsung_wallet_url=samsung_wallet_url,
-        message="Wallet links are ready for integration. Configure production signing/issuer credentials before go-live.",
+        message="Configure GOOGLE_ISSUER_ID + GOOGLE_SERVICE_ACCOUNT and APPLE_PASS_TYPE_ID + APPLE_TEAM_ID before go-live.",
     )
 
 @app.post("/events/", response_model=schemas.Event)
@@ -1424,11 +1465,7 @@ def generate_apple_wallet_pass(ticket_id: int, db: Session = Depends(get_db)):
 
         media_type='application/vnd.apple.pkpass',
 
-        headers={'Content-Disposition': f'attachment; filename=\
-
-ticket_
-
-\'}
+        headers={'Content-Disposition': f'attachment; filename="ticket_{ticket_id}.pkpass"'}
 
     )
 
@@ -1446,15 +1483,7 @@ def generate_google_wallet_jwt(ticket_id: int, db: Session = Depends(get_db)):
 
     
 
-    # Simulated JWT Generation for Google Wallet \
-
-Save
-
-to
-
-Google
-
-Pay\ link
+    # Simulated JWT Generation for Google Wallet - Save to Google Pay link
 
     dummy_jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI...'
 
