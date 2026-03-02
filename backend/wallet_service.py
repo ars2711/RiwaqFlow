@@ -16,7 +16,7 @@ SERVICE_ACCOUNT_JSON = os.getenv('GOOGLE_SERVICE_ACCOUNT', 'credentials.json')
 APPLE_PASS_TYPE_ID = os.getenv('APPLE_PASS_TYPE_ID', 'pass.com.riwaqflow.ticket')
 APPLE_TEAM_ID = os.getenv('APPLE_TEAM_ID', 'YOUR_TEAM_ID')
 
-def generate_google_wallet_jwt(ticket_id: int, event_name: str, event_date: str) -> str:
+def generate_google_wallet_jwt(ticket_id: str, event_name: str, event_date: str) -> str:
     # In production, use standard google-auth library and fetch private_key from credentials.json
     # Here we outline the actual standard JWT standard format required by Google Pay API
     payload = {
@@ -26,7 +26,7 @@ def generate_google_wallet_jwt(ticket_id: int, event_name: str, event_date: str)
         'iat': int(time.time()),
         'payload': {
             'genericObjects': [{
-                'id': f'{ISSUER_ID}.{ticket_id}',
+                'id': f"{ISSUER_ID}.{str(ticket_id).replace('-', '_')}",
                 'classId': f'{ISSUER_ID}.{CLASS_ID}',
                 'genericType': 'GENERIC_TYPE_UNSPECIFIED',
                 'hexBackgroundColor': '#10b981',
@@ -67,7 +67,7 @@ def generate_google_wallet_jwt(ticket_id: int, event_name: str, event_date: str)
     token = jwt.encode(payload, private_key, algorithm='RS256')
     return token
 
-def generate_apple_pkpass(ticket_id: int, event_name: str) -> bytes:
+def generate_apple_pkpass(ticket_id: str, event_name: str) -> bytes:
     # To generate an authentic .pkpass, we need a directory with:
     # 1. pass.json (the structure below)
     # 2. icon.png, icon@2x.png
@@ -77,7 +77,7 @@ def generate_apple_pkpass(ticket_id: int, event_name: str) -> bytes:
     pass_json = {
         'formatVersion': 1,
         'passTypeIdentifier': APPLE_PASS_TYPE_ID,
-        'serialNumber': str(ticket_id),
+        'serialNumber': ticket_id,
         'teamIdentifier': APPLE_TEAM_ID,
         'organizationName': 'RiwaqFlow',
         'description': event_name,
@@ -89,11 +89,11 @@ def generate_apple_pkpass(ticket_id: int, event_name: str) -> bytes:
                 { 'key': 'event', 'label': 'EVENT', 'value': event_name }
             ],
             'primaryFields': [
-                { 'key': 'ticket', 'label': 'TICKET NO', 'value': f'#{ticket_id}' }
+                { 'key': 'ticket', 'label': 'TICKET ID', 'value': f'#{str(ticket_id)[:8].upper()}' }
             ]
         },
         'barcode': {
-            'message': f'ticket_{ticket_id}_valid',
+            'message': ticket_id,
             'format': 'PKBarcodeFormatQR',
             'messageEncoding': 'iso-8859-1'
         }
@@ -113,6 +113,6 @@ def generate_apple_pkpass(ticket_id: int, event_name: str) -> bytes:
         
         # Sign the manifest.json with cryptography library in prod:
         # signature = sign_manifest_with_cert(manifest)
-        zf.writestr('signature', b'DUMMY_SIGNATURE_BINARY')
+        zf.writestr('signature', 'DEMO_UNSIGNED_PASS — production requires Apple WWDR signing')
 
     return memory_zip.getvalue()
