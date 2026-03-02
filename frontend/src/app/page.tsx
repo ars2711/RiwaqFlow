@@ -231,8 +231,17 @@ export default function Home() {
               ))}
             </motion.div>
 
-            <h1 className="section-title text-4xl sm:text-5xl font-black flex items-center justify-center gap-3">
-              Riwaq <span className="opacity-80 mt-1">رواق</span>
+            <h1 className="section-title text-4xl sm:text-5xl font-black flex items-center justify-center gap-3 flex-wrap">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent-violet)]">
+                Riwaq
+              </span>
+              <span
+                className="arabic-riwaq text-4xl sm:text-5xl"
+                aria-label="رواق"
+                lang="ar"
+              >
+                رواق
+              </span>
             </h1>
             <p className="section-subtitle mx-auto mt-2 text-base italic opacity-70">
               From gatherings to flow

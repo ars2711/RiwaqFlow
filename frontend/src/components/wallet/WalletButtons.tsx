@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { WalletCards, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { WalletCards, Loader2, X, QrCode, Info } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // ── Wallet pass data interface ────────────────────────────────────────────────
 export interface WalletPassData {
@@ -172,96 +173,14 @@ function triggerDownload(blob: Blob, filename: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  // Must be in DOM for Firefox/Safari to fire the download
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-// ── Base64URL helper (for Google Wallet JWT) ─────────────────────────────────
-function b64url(s: string): string {
-  return btoa(unescape(encodeURIComponent(s)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-// ── Google Wallet URL generator ──────────────────────────────────────────────
-// Produces a "Save to Google Wallet" URL with an unsigned demo JWT payload.
-// In production, the JWT must be RS256-signed by a Google service account.
-function generateGoogleWalletUrl(d: WalletPassData): string {
-  const issuerId = "3388000000022795088"; // demo issuer ID placeholder
-  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = b64url(
-    JSON.stringify({
-      iss: "riwaqflow-demo@riwaqflow.iam.gserviceaccount.com",
-      aud: "google",
-      typ: "savetowallet",
-      iat: Math.floor(Date.now() / 1000),
-      payload: {
-        genericObjects: [
-          {
-            id: `${issuerId}.${d.ticketId.replace(/[^a-zA-Z0-9_.-]/g, "_")}`,
-            classId: `${issuerId}.riwaqflow_event_ticket`,
-            genericType: "GENERIC_TYPE_UNSPECIFIED",
-            hexBackgroundColor: d.backgroundColor ?? "#10b981",
-            logo: { sourceUri: { uri: "https://riwaqflow.app/logo.png" } },
-            cardTitle: { defaultValue: { language: "en", value: "RiwaqFlow" } },
-            header: { defaultValue: { language: "en", value: d.eventName } },
-            subheader: {
-              defaultValue: { language: "en", value: d.holderName },
-            },
-            textModulesData: [
-              { header: "TYPE", body: d.ticketType, id: "type" },
-              { header: "SEAT", body: d.seat ?? "—", id: "seat" },
-              { header: "VENUE", body: d.venueName, id: "venue" },
-            ],
-            barcode: {
-              type: "QR_CODE",
-              value: d.qrValue,
-              alternateText: d.ticketId,
-            },
-            validTimeInterval: {
-              start: { date: new Date(d.eventDate).toISOString() },
-            },
-          },
-        ],
-      },
-    }),
-  );
-  const demoSig = b64url("DEMO_UNSIGNED_PASS");
-  const jwt = `${header}.${payload}.${demoSig}`;
-  return `https://pay.google.com/gp/v/save/${jwt}`;
-}
-
-// ── Samsung Wallet URL generator ─────────────────────────────────────────────
-function generateSamsungWalletUrl(d: WalletPassData): string {
-  // Samsung Wallet uses a merchant-specific deeplink. Without a Partnership ID
-  // we generate the standard web-to-wallet redirect URL with pass data encoded.
-  const passData = b64url(
-    JSON.stringify({
-      partnerInfo: {
-        serviceId: "riwaqflow_demo",
-        appScheme: "riwaqflow://ticket",
-      },
-      card: {
-        type: "ticket",
-        title: d.eventName,
-        subTitle: `${d.holderName} · ${d.ticketType}`,
-        ticketNumber: d.ticketId,
-        venue: d.venueName,
-        date: new Date(d.eventDate).toLocaleString("en-PK", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        seat: d.seat ?? "—",
-        barcode: { type: "QR", value: d.qrValue },
-        bgColor: d.backgroundColor ?? "#10b981",
-      },
-    }),
-  );
-  return `https://wallet.samsung.com/a2w/detail?cardData=${passData}&serviceId=riwaqflow_demo`;
-}
 
 // ── Brand-accurate Apple logo ────────────────────────────────────────────────
 function AppleLogo({ className }: { className?: string }) {
@@ -346,6 +265,102 @@ function SamsungLogo({ className }: { className?: string }) {
   );
 }
 
+// ── In-app demo pass modal (Google/Samsung preview) ────────────────────────
+function DemoPassModal({
+  data,
+  brand,
+  onClose,
+}: {
+  data: WalletPassData;
+  brand: "google" | "samsung";
+  onClose: () => void;
+}) {
+  const bg = data.backgroundColor ?? "#10b981";
+  const brandLabel = brand === "google" ? "Google Wallet" : "Samsung Wallet";
+  const brandNote =
+    brand === "google"
+      ? "Production saves need a signed Google service-account JWT."
+      : "Production saves need a registered Samsung Wallet Partner ID.";
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="demo-modal-backdrop"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
+        <motion.div
+          key="demo-modal-card"
+          className="w-full max-w-sm bg-[var(--surface-strong)] rounded-3xl overflow-hidden shadow-2xl border border-[var(--border)]"
+          initial={{ y: 80, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 80, opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Wallet pass card */}
+          <div
+            className="relative p-5 text-white overflow-hidden"
+            style={{ background: `linear-gradient(135deg, ${bg} 0%, ${bg}cc 100%)` }}
+          >
+            <div className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{ background: "repeating-linear-gradient(45deg,rgba(255,255,255,.15) 0,rgba(255,255,255,.15) 1px,transparent 1px,transparent 20px)" }} />
+            <div className="relative z-10 flex items-start justify-between mb-3">
+              <div>
+                <p className="text-[10px] font-bold tracking-widest uppercase opacity-70 mb-0.5">
+                  {data.societyName ?? "RiwaqFlow"}
+                </p>
+                <h2 className="text-lg font-black leading-tight">{data.eventName}</h2>
+              </div>
+              <button onClick={onClose} aria-label="Close pass preview" className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="relative z-10 grid grid-cols-2 gap-3 text-sm mb-4">
+              <div>
+                <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Holder</p>
+                <p className="font-semibold">{data.holderName}</p>
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Type</p>
+                <p className="font-semibold">{data.ticketType}</p>
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Venue</p>
+                <p className="font-semibold text-xs">{data.venueName}</p>
+              </div>
+              {data.seat && (
+                <div>
+                  <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Seat</p>
+                  <p className="font-semibold">{data.seat}</p>
+                </div>
+              )}
+            </div>
+            {/* QR code */}
+            <div className="relative z-10 flex justify-center">
+              <div className="bg-white rounded-xl p-2.5 shadow-lg">
+                <QRCodeSVG value={data.qrValue} size={110} level="H" includeMargin={false} />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer notice */}
+          <div className="px-5 py-4 flex items-start gap-2.5 bg-[var(--surface)]">
+            <Info className="w-4 h-4 text-[var(--primary)] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-[var(--fg)] mb-0.5">{brandLabel} Preview</p>
+              <p className="text-[11px] leading-relaxed opacity-60">{brandNote}</p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // ── Individual wallet buttons ─────────────────────────────────────────────────
 
 interface AppleProps {
@@ -354,62 +369,67 @@ interface AppleProps {
 }
 export function AppleWalletButton({ url, passData }: AppleProps) {
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const handleClick = async () => {
+    setErr(null);
     if (url) {
-      window.open(url, "_blank");
+      // Real backend URL — navigate directly (acts as a file download)
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       return;
     }
     if (passData) {
       setBusy(true);
       try {
         const blob = generateApplePkpass(passData);
-        const safeName = passData.eventName
-          .replace(/[^a-z0-9]/gi, "_")
-          .slice(0, 30);
+        const safeName = passData.eventName.replace(/[^a-z0-9]/gi, "_").slice(0, 30);
         triggerDownload(blob, `${safeName}_ticket.pkpass`);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Failed to generate pass");
       } finally {
         setBusy(false);
       }
-      return;
     }
   };
 
   const isDemo = !url && !passData;
 
   return (
-    <motion.button
-      whileHover={{ scale: 1.025, boxShadow: "0 8px 32px rgba(0,0,0,0.45)" }}
-      whileTap={{ scale: 0.97 }}
-      onClick={() => void handleClick()}
-      disabled={busy || isDemo}
-      className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{
-        background: "linear-gradient(135deg,#1a1a1a 0%,#0a0a0a 100%)",
-        color: "white",
-        border: "1px solid rgba(255,255,255,0.12)",
-      }}
-      aria-label="Add to Apple Wallet"
-    >
-      {busy ? (
-        <Loader2 className="w-5 h-5 flex-shrink-0 animate-spin" />
-      ) : (
-        <AppleLogo className="w-5 h-6 flex-shrink-0" />
-      )}
-      <div className="flex flex-col items-start leading-none">
-        <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">
-          Add to
-        </span>
-        <span className="text-[13px] font-bold tracking-tight">
-          Apple Wallet
-        </span>
-      </div>
-      {passData && !url && (
-        <span className="ml-auto text-[9px] opacity-55 font-medium text-emerald-400">
-          ↓ download
-        </span>
-      )}
-    </motion.button>
+    <div className="flex flex-col gap-1">
+      <motion.button
+        whileHover={{ scale: 1.025, boxShadow: "0 8px 32px rgba(0,0,0,0.45)" }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => void handleClick()}
+        disabled={busy || isDemo}
+        className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: "linear-gradient(135deg,#1a1a1a 0%,#0a0a0a 100%)",
+          color: "white",
+          border: "1px solid rgba(255,255,255,0.12)",
+        }}
+        aria-label="Add to Apple Wallet"
+      >
+        {busy ? (
+          <Loader2 className="w-5 h-5 flex-shrink-0 animate-spin" />
+        ) : (
+          <AppleLogo className="w-5 h-6 flex-shrink-0" />
+        )}
+        <div className="flex flex-col items-start leading-none">
+          <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">Add to</span>
+          <span className="text-[13px] font-bold tracking-tight">Apple Wallet</span>
+        </div>
+        {passData && !url && (
+          <span className="ml-auto text-[9px] opacity-55 font-medium text-emerald-400">↓ .pkpass</span>
+        )}
+      </motion.button>
+      {err && <p className="text-[10px] text-rose-400 px-1">{err}</p>}
+    </div>
   );
 }
 
@@ -418,49 +438,59 @@ interface GoogleProps {
   passData?: WalletPassData;
 }
 export function GoogleWalletButton({ url, passData }: GoogleProps) {
-  const resolvedUrl =
-    url ?? (passData ? generateGoogleWalletUrl(passData) : null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const handleClick = () => {
-    if (resolvedUrl) {
-      window.open(resolvedUrl, "_blank");
+    if (url) {
+      // Real backend URL (signed JWT) — navigate via hidden anchor to avoid popup blocker
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+    if (passData) {
+      // No real backend URL — show in-app pass preview
+      setShowDemo(true);
     }
   };
 
   const isDemo = !url && !passData;
 
   return (
-    <motion.button
-      whileHover={{
-        scale: 1.025,
-        boxShadow: "0 8px 32px rgba(66,133,244,0.25)",
-      }}
-      whileTap={{ scale: 0.97 }}
-      onClick={handleClick}
-      disabled={isDemo}
-      className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{
-        background: "linear-gradient(135deg,#1e2433 0%,#131926 100%)",
-        color: "white",
-        border: "1px solid rgba(66,133,244,0.3)",
-      }}
-      aria-label="Save to Google Wallet"
-    >
-      <GoogleLogo className="w-5 h-5 flex-shrink-0" />
-      <div className="flex flex-col items-start leading-none">
-        <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">
-          Save to
-        </span>
-        <span className="text-[13px] font-bold tracking-tight">
-          Google Wallet
-        </span>
-      </div>
-      {passData && !url && (
-        <span className="ml-auto text-[9px] opacity-55 font-medium text-blue-400">
-          ↗ open
-        </span>
+    <>
+      <motion.button
+        whileHover={{ scale: 1.025, boxShadow: "0 8px 32px rgba(66,133,244,0.25)" }}
+        whileTap={{ scale: 0.97 }}
+        onClick={handleClick}
+        disabled={isDemo}
+        className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: "linear-gradient(135deg,#1e2433 0%,#131926 100%)",
+          color: "white",
+          border: "1px solid rgba(66,133,244,0.3)",
+        }}
+        aria-label="Save to Google Wallet"
+      >
+        <GoogleLogo className="w-5 h-5 flex-shrink-0" />
+        <div className="flex flex-col items-start leading-none">
+          <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">Save to</span>
+          <span className="text-[13px] font-bold tracking-tight">Google Wallet</span>
+        </div>
+        {passData && !url && (
+          <span className="ml-auto text-[9px] opacity-55 font-medium text-blue-400 flex items-center gap-1">
+            <QrCode className="w-3 h-3" />preview
+          </span>
+        )}
+      </motion.button>
+      {showDemo && passData && (
+        <DemoPassModal data={passData} brand="google" onClose={() => setShowDemo(false)} />
       )}
-    </motion.button>
+    </>
   );
 }
 
@@ -469,46 +499,57 @@ interface SamsungProps {
   passData?: WalletPassData;
 }
 export function SamsungWalletButton({ url, passData }: SamsungProps) {
-  const resolvedUrl =
-    url ?? (passData ? generateSamsungWalletUrl(passData) : null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const handleClick = () => {
-    if (resolvedUrl) {
-      window.open(resolvedUrl, "_blank");
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+    if (passData) {
+      setShowDemo(true);
     }
   };
 
   const isDemo = !url && !passData;
 
   return (
-    <motion.button
-      whileHover={{ scale: 1.025, boxShadow: "0 8px 32px rgba(20,40,160,0.4)" }}
-      whileTap={{ scale: 0.97 }}
-      onClick={handleClick}
-      disabled={isDemo}
-      className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{
-        background: "linear-gradient(135deg,#1428A0 0%,#0d1c75 100%)",
-        color: "white",
-        border: "1px solid rgba(255,255,255,0.12)",
-      }}
-      aria-label="Add to Samsung Wallet"
-    >
-      <SamsungLogo className="w-5 h-5 flex-shrink-0" />
-      <div className="flex flex-col items-start leading-none">
-        <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">
-          Add to
-        </span>
-        <span className="text-[13px] font-bold tracking-tight">
-          Samsung Wallet
-        </span>
-      </div>
-      {passData && !url && (
-        <span className="ml-auto text-[9px] opacity-55 font-medium text-blue-300">
-          ↗ open
-        </span>
+    <>
+      <motion.button
+        whileHover={{ scale: 1.025, boxShadow: "0 8px 32px rgba(20,40,160,0.4)" }}
+        whileTap={{ scale: 0.97 }}
+        onClick={handleClick}
+        disabled={isDemo}
+        className="flex items-center gap-3 w-full rounded-2xl py-3.5 px-5 font-semibold text-sm transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: "linear-gradient(135deg,#1428A0 0%,#0d1c75 100%)",
+          color: "white",
+          border: "1px solid rgba(255,255,255,0.12)",
+        }}
+        aria-label="Add to Samsung Wallet"
+      >
+        <SamsungLogo className="w-5 h-5 flex-shrink-0" />
+        <div className="flex flex-col items-start leading-none">
+          <span className="text-[9px] font-light opacity-65 tracking-widest uppercase mb-0.5">Add to</span>
+          <span className="text-[13px] font-bold tracking-tight">Samsung Wallet</span>
+        </div>
+        {passData && !url && (
+          <span className="ml-auto text-[9px] opacity-55 font-medium text-blue-300 flex items-center gap-1">
+            <QrCode className="w-3 h-3" />preview
+          </span>
+        )}
+      </motion.button>
+      {showDemo && passData && (
+        <DemoPassModal data={passData} brand="samsung" onClose={() => setShowDemo(false)} />
       )}
-    </motion.button>
+    </>
   );
 }
 

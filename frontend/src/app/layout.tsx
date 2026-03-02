@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Scheherazade_New } from "next/font/google";
 import "./globals.css";
 import SwRegister from "./sw-register";
 import Navbar from "./navbar";
@@ -12,6 +12,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+/** Scheherazade New — an award-winning Arabic font by SIL, ideal for رواق */
+const arabicFont = Scheherazade_New({
+  weight: ["400", "700"],
+  subsets: ["arabic"],
+  variable: "--font-arabic",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -52,9 +60,12 @@ export const metadata: Metadata = {
       "A society-first platform for NUST events, e-ticketing, and live campus intelligence.",
   },
   icons: {
-    icon: [{ url: "/favicon.ico", type: "image/x-icon" }],
-    shortcut: ["/favicon.ico"],
-    apple: ["/favicon.ico"],
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: ["/icon.svg"],
+    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -66,7 +77,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${arabicFont.variable} antialiased`}
       >
         <SwRegister />
         <Navbar />

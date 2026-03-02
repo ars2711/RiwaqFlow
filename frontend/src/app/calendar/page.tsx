@@ -5,8 +5,54 @@ import BackButton from "@/app/back-button";
 import { API_BASE, authHeaders } from "@/lib/api";
 import { EventItem, VenueAnalyticsPoint } from "@/lib/types";
 import { motion } from "framer-motion";
+import { CalendarPlus, ExternalLink } from "lucide-react";
 
 type EventStats = { issued: number; entries: number; exits: number };
+
+// ── Calendar utility helpers ──────────────────────────────────────────────
+
+function formatDtUTC(dateStr: string): string {
+  return (
+    new Date(dateStr).toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z"
+  );
+}
+
+function makeGoogleCalUrl(event: EventItem): string {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.name,
+    dates: `${formatDtUTC(event.starts_at)}/${formatDtUTC(event.ends_at)}`,
+    details: `${event.society_name ?? "Independent"} event at NUST — Secure tickets at riwaq.app`,
+    location: `${event.venue}, NUST H-12, Islamabad`,
+  });
+  return `https://www.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadIcal(event: EventItem): void {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Riwaq//NUST Events//EN",
+    "BEGIN:VEVENT",
+    `SUMMARY:${event.name}`,
+    `DTSTART:${formatDtUTC(event.starts_at)}`,
+    `DTEND:${formatDtUTC(event.ends_at)}`,
+    `LOCATION:${event.venue}, NUST H-12, Islamabad`,
+    `DESCRIPTION:${event.society_name ?? "Independent"} event at NUST. Secure tickets on Riwaq.`,
+    `UID:riwaq-${event.id}@nust.edu.pk`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+  const blob = new Blob([lines.join("\r\n")], {
+    type: "text/calendar;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${event.name.replace(/\s+/g, "-")}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -169,12 +215,33 @@ export default function CalendarPage() {
                       • Default PKR {event.default_price_pkr ?? "-"} • On-Spot
                       PKR {event.on_spot_price_pkr ?? "-"}
                     </p>
-                    <a
-                      href={`/buy/${event.id}`}
-                      className="btn-secondary inline-flex mt-2 px-2 py-1 text-xs"
-                    >
-                      Buy Ticket
-                    </a>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <a
+                        href={`/buy/${event.id}`}
+                        className="btn-secondary inline-flex px-2 py-1 text-xs"
+                      >
+                        Buy Ticket
+                      </a>
+                      {/* ── Add to Calendar ── */}
+                      <a
+                        href={makeGoogleCalUrl(event)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[var(--primary)]/10 hover:border-[var(--primary)]/40 transition-colors text-[var(--foreground)]"
+                        title="Add to Google Calendar"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Google Cal
+                      </a>
+                      <button
+                        onClick={() => downloadIcal(event)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[var(--primary)]/10 hover:border-[var(--primary)]/40 transition-colors text-[var(--foreground)]"
+                        title="Download iCal / Apple Calendar"
+                      >
+                        <CalendarPlus className="w-3 h-3" />
+                        iCal
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })}

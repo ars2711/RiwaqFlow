@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="10" y1="90" x2="90" y2="10" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#335dff"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#335dff"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer arch — Riwaq (portal/colonnade) -->
+  <path d="M 18 90 V 44 C 18 23 34 12 50 12 C 66 12 82 23 82 44 V 90"
+        stroke="url(#g1)" stroke-width="11" stroke-linecap="round"/>
+  <!-- Inner flow line -->
+  <path d="M 50 90 V 58 C 50 43 34 43 34 28"
+        stroke="url(#g2)" stroke-width="11" stroke-linecap="round"/>
+  <!-- Glowing dot -->
+  <circle cx="34" cy="28" r="7" fill="#8B5CF6"/>
+  <circle cx="34" cy="28" r="3.5" fill="#fff"/>
+</svg>

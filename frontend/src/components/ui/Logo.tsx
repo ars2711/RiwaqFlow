@@ -11,6 +11,7 @@ export function RiwaqLogo({ className = "h-6 w-6" }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
+        {/* Primary gradient — uses CSS theme variables so it responds to dark/light mode */}
         <linearGradient
           id="riwaq-grad-1"
           x1="10"
@@ -19,8 +20,8 @@ export function RiwaqLogo({ className = "h-6 w-6" }: { className?: string }) {
           y2="10"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#3B82F6" />
-          <stop offset="1" stopColor="#8B5CF6" />
+          <stop stopColor="var(--primary, #335dff)" />
+          <stop offset="1" stopColor="var(--accent-violet, #8B5CF6)" />
         </linearGradient>
         <linearGradient
           id="riwaq-grad-2"
@@ -30,42 +31,58 @@ export function RiwaqLogo({ className = "h-6 w-6" }: { className?: string }) {
           y2="90"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#06B6D4" />
-          <stop offset="1" stopColor="#3B82F6" />
+          <stop stopColor="var(--accent, #0ea5e9)" />
+          <stop offset="1" stopColor="var(--primary, #335dff)" />
         </linearGradient>
+        {/* Glow filter */}
+        <filter id="riwaq-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
       </defs>
 
-      {/* Main outer portal/arch shape representing "Riwaq" */}
+      {/* Main outer portal/arch — the رواق (Riwaq) colonnade form */}
       <motion.path
-        d="M 20 90 V 45 C 20 25 35 15 50 15 C 65 15 80 25 80 45 V 90"
+        d="M 18 90 V 44 C 18 23 34 12 50 12 C 66 12 82 23 82 44 V 90"
         stroke="url(#riwaq-grad-1)"
-        strokeWidth="12"
+        strokeWidth="11"
         strokeLinecap="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
+        transition={{ duration: 1.4, ease: "easeInOut" }}
+        filter="url(#riwaq-glow)"
       />
 
-      {/* Inner flowing line representing "Flow" */}
+      {/* Inner flowing line — the رواق "flow" current */}
       <motion.path
-        d="M 50 90 V 60 C 50 45 35 45 35 30"
+        d="M 50 90 V 58 C 50 43 34 43 34 28"
         stroke="url(#riwaq-grad-2)"
-        strokeWidth="12"
+        strokeWidth="11"
         strokeLinecap="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
+        transition={{ duration: 1.4, ease: "easeInOut", delay: 0.45 }}
       />
 
-      {/* Dynamic glowing dot */}
+      {/* Animated glow dot at the tip of the flow */}
       <motion.circle
-        cx="35"
-        cy="30"
-        r="6"
-        fill="#ffffff"
+        cx="34"
+        cy="28"
+        r="7"
+        fill="var(--accent-violet, #8B5CF6)"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1.8 }}
+        transition={{ duration: 0.45, delay: 1.7 }}
+        filter="url(#riwaq-glow)"
+      />
+      <motion.circle
+        cx="34"
+        cy="28"
+        r="3.5"
+        fill="var(--foreground, #ffffff)"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 0.9 }}
+        transition={{ duration: 0.3, delay: 1.85 }}
       />
     </svg>
   );

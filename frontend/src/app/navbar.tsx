@@ -26,9 +26,16 @@ export default function Navbar() {
           <span className="site-logo-mark" aria-hidden>
             <RiwaqLogo className="h-6 w-6" />
           </span>
-          <span className="site-logo-text bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-violet-500 font-bold flex items-center gap-2">
-            Riwaq{" "}
-            <span className="font-extrabold text-xs opacity-80">(رواق)</span>
+          <span className="site-logo-text flex items-center gap-2">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent-violet)] font-black tracking-tight">
+              Riwaq
+            </span>
+            <span
+              className="arabic-riwaq-sm text-base leading-none"
+              aria-label="رواق"
+            >
+              رواق
+            </span>
           </span>
         </Link>
 

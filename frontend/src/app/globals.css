@@ -11,6 +11,7 @@
   --primary: #335dff;
   --primary-soft: rgba(51, 93, 255, 0.2);
   --accent: #0ea5e9;
+  --accent-violet: #7c3aed;
   --success: #059669;
   --danger: #dc2626;
   --muted: #475569;
@@ -28,6 +29,7 @@
   --primary: #6d8dff;
   --primary-soft: rgba(109, 141, 255, 0.22);
   --accent: #22d3ee;
+  --accent-violet: #a78bfa;
   --success: #34d399;
   --danger: #f87171;
   --muted: #b4c1e8;
@@ -39,6 +41,34 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* ── Arabic / Riwaq brand text ─────────────────────────────────────────── */
+/* Applied to رواق characters everywhere — uses Scheherazade New (Arabic) */
+.arabic-riwaq {
+  font-family:
+    var(--font-arabic), "Scheherazade New", "Noto Naskh Arabic",
+    "Arabic Typesetting", serif;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--primary), var(--accent-violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.03em;
+  display: inline-block;
+}
+
+/* Smaller variant for nav / badges */
+.arabic-riwaq-sm {
+  font-family:
+    var(--font-arabic), "Scheherazade New", "Noto Naskh Arabic", serif;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--primary), var(--accent-violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
 body {
