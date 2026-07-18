@@ -124,10 +124,10 @@ export default function BuyEventTicketPage() {
 
         {/* Event info card */}
         {event ? (
-          <div className="glass-panel p-5 rounded-2xl">
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl p-2 bg-[var(--primary-soft)] border border-[var(--border)] shrink-0">
-                <Ticket className="w-6 h-6 text-[var(--primary)]" />
+              <div className="p-2 bg-[var(--verified)]/10 border border-[var(--border)] shrink-0">
+                <Ticket className="w-6 h-6 text-[var(--verified)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="section-title text-xl font-black">
@@ -151,12 +151,12 @@ export default function BuyEventTicketPage() {
                 href={getCalendarLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="glass-soft rounded-xl p-3 border border-[var(--border)] flex items-start gap-2 hover:bg-[var(--primary-soft)] transition-colors cursor-pointer group"
+                className="border border-[var(--border)] bg-[var(--surface-2)] p-3 border-[var(--border)] flex items-start gap-2 hover:bg-[var(--verified)/10] transition-colors cursor-pointer group"
                 title="Add to Google Calendar"
               >
-                <CalendarRange className="w-4 h-4 text-[var(--primary)] mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                <CalendarRange className="w-4 h-4 text-[var(--verified)] mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
                 <div>
-                  <p className="font-semibold group-hover:text-[var(--primary)] transition-colors">
+                  <p className="font-semibold group-hover:text-[var(--verified)] transition-colors">
                     Date & time
                   </p>
                   <p className="section-subtitle text-xs mt-0.5">
@@ -182,12 +182,12 @@ export default function BuyEventTicketPage() {
                 href={getGoogleMapsLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="glass-soft rounded-xl p-3 border border-[var(--border)] flex items-start gap-2 hover:bg-[var(--primary-soft)] transition-colors cursor-pointer group"
+                className="border border-[var(--border)] bg-[var(--surface-2)] p-3 border-[var(--border)] flex items-start gap-2 hover:bg-[var(--verified)/10] transition-colors cursor-pointer group"
                 title="Get Directions"
               >
-                <MapPin className="w-4 h-4 text-[var(--primary)] mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                <MapPin className="w-4 h-4 text-[var(--verified)] mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
                 <div>
-                  <p className="font-semibold group-hover:text-[var(--primary)] transition-colors">
+                  <p className="font-semibold group-hover:text-[var(--verified)] transition-colors">
                     Venue
                   </p>
                   <p className="section-subtitle text-xs mt-0.5">
@@ -205,7 +205,7 @@ export default function BuyEventTicketPage() {
             {/* Pricing */}
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               {event.early_bird_price_pkr != null && (
-                <div className="glass-soft rounded-lg p-2 border border-[var(--border)]">
+                <div className="border border-[var(--border)] bg-[var(--surface-2)] p-2 border-[var(--border)]">
                   <p className="font-bold">Early Bird</p>
                   <p className="section-subtitle">
                     PKR {event.early_bird_price_pkr}
@@ -213,15 +213,15 @@ export default function BuyEventTicketPage() {
                 </div>
               )}
               {event.default_price_pkr != null && (
-                <div className="glass-soft rounded-lg p-2 border border-[var(--primary)]/40 bg-[var(--primary-soft)]">
-                  <p className="font-bold text-[var(--primary)]">Default</p>
+                <div className="border border-[var(--border)] bg-[var(--surface-2)] p-2 border-[var(--verified)]/40 bg-[var(--verified)/10]">
+                  <p className="font-bold text-[var(--verified)]">Default</p>
                   <p className="section-subtitle">
                     PKR {event.default_price_pkr}
                   </p>
                 </div>
               )}
               {event.on_spot_price_pkr != null && (
-                <div className="glass-soft rounded-lg p-2 border border-[var(--border)]">
+                <div className="border border-[var(--border)] bg-[var(--surface-2)] p-2 border-[var(--border)]">
                   <p className="font-bold">On-Spot</p>
                   <p className="section-subtitle">
                     PKR {event.on_spot_price_pkr}
@@ -231,7 +231,7 @@ export default function BuyEventTicketPage() {
             </div>
           </div>
         ) : (
-          <div className="glass-panel p-5 rounded-2xl">
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
             <h1 className="section-title">Buy Ticket</h1>
             <p className="section-subtitle text-xs mt-1 font-mono">
               Event {eventId}
@@ -240,7 +240,7 @@ export default function BuyEventTicketPage() {
         )}
 
         {/* Purchase form */}
-        <div className="glass-panel p-6 space-y-4 rounded-2xl">
+        <div className="block-card p-6 space-y-4 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
           <h2 className="font-bold text-base">Attendee details</h2>
           <p className="section-subtitle text-sm -mt-2">
             Fill in your details and proceed to checkout. Ticket activates after
@@ -346,17 +346,17 @@ export default function BuyEventTicketPage() {
                       onClick={() =>
                         setForm({ ...form, payment_method: method.id })
                       }
-                      className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
+                      className={`flex flex-col items-center justify-center gap-2 p-3  border transition-all ${
                         isActive
-                          ? "bg-[var(--primary)]/10 border-[var(--primary)] ring-1 ring-[var(--primary)]/30"
-                          : "bg-[var(--fg)]/5 border-[var(--border)] hover:bg-[var(--fg)]/10"
+                          ? "bg-[var(--verified)]/10 border-[var(--verified)] ring-1 ring-[var(--verified)]/30"
+                          : "bg-[var(--surface-2)] border-[var(--border)] hover:bg-[var(--surface-2)]/80"
                       }`}
                     >
                       <Icon
-                        className={`w-6 h-6 ${isActive ? "text-[var(--primary)]" : method.color}`}
+                        className={`w-6 h-6 ${isActive ? "text-[var(--verified)]" : method.color}`}
                       />
                       <span
-                        className={`text-xs font-bold ${isActive ? "text-[var(--primary)]" : "text-[var(--fg-muted)]"}`}
+                        className={`text-xs font-bold ${isActive ? "text-[var(--verified)]" : "text-[var(--fg-muted)]"}`}
                       >
                         {method.label}
                       </span>
@@ -383,7 +383,7 @@ export default function BuyEventTicketPage() {
           </div>
 
           {tierPrice != null && (
-            <p className="text-sm font-semibold text-[var(--primary)]">
+            <p className="text-sm font-semibold text-[var(--verified)]">
               Selected tier price: PKR {tierPrice}
             </p>
           )}
@@ -399,7 +399,7 @@ export default function BuyEventTicketPage() {
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           {result && (
-            <div className="glass-soft border border-[var(--border)] rounded-xl p-4 space-y-2">
+            <div className="border border-[var(--border)] bg-[var(--surface-2)] p-4 space-y-2">
               <p className="font-semibold text-emerald-400">
                 ✓ Ticket purchase initiated
               </p>
@@ -407,7 +407,7 @@ export default function BuyEventTicketPage() {
                 Ticket ID:{" "}
                 <a
                   href={`/ticket/${result.ticket_id}`}
-                  className="text-[var(--primary)] underline"
+                  className="text-[var(--verified)] underline"
                 >
                   {result.ticket_id}
                 </a>

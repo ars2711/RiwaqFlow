@@ -1,89 +1,49 @@
-"use client";
+/**
+ * Riwaq v3 Logo — Three abstracted arches with a pulse dot.
+ *
+ * Three overlapping arches (outer two at 35% opacity, centre at full)
+ * with a small verified-green dot at the apex of the centre arch.
+ * The dot is the brand mark's identity, not a UI status indicator.
+ *
+ * No framer-motion, no glow filter. Static SVG.
+ */
 
-import { motion } from "framer-motion";
+interface RiwaqLogoProps {
+  className?: string;
+  /** Use paper-ink colors (for the admit-card letterhead on cream paper) */
+  paper?: boolean;
+}
 
-export function RiwaqLogo({ className = "h-6 w-6" }: { className?: string }) {
+export function RiwaqLogo({ className = "h-6 w-6", paper = false }: RiwaqLogoProps) {
+  const archColor = paper ? "#1C3344" : "currentColor";
+  const dotColor = paper ? "#146353" : "var(--verified)";
+
   return (
     <svg
-      viewBox="0 0 100 100"
-      fill="none"
+      viewBox="0 0 40 40"
       className={className}
-      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      style={{ color: "var(--text)" }}
     >
-      <defs>
-        {/* Primary gradient — uses CSS theme variables so it responds to dark/light mode */}
-        <linearGradient
-          id="riwaq-grad-1"
-          x1="10"
-          y1="90"
-          x2="90"
-          y2="10"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="var(--primary, #335dff)" />
-          <stop offset="1" stopColor="var(--accent-violet, #8B5CF6)" />
-        </linearGradient>
-        <linearGradient
-          id="riwaq-grad-2"
-          x1="10"
-          y1="10"
-          x2="90"
-          y2="90"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="var(--accent, #0ea5e9)" />
-          <stop offset="1" stopColor="var(--primary, #335dff)" />
-        </linearGradient>
-        {/* Glow filter */}
-        <filter id="riwaq-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-
-      {/* Main outer portal/arch — the رواق (Riwaq) colonnade form */}
-      <motion.path
-        d="M 18 90 V 44 C 18 23 34 12 50 12 C 66 12 82 23 82 44 V 90"
-        stroke="url(#riwaq-grad-1)"
-        strokeWidth="11"
-        strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.4, ease: "easeInOut" }}
-        filter="url(#riwaq-glow)"
+      {/* Left arch (35% opacity) */}
+      <path
+        d="M4 34 L4 18 A6 6 0 0 1 16 18 L16 34 Z"
+        fill={archColor}
+        opacity={paper ? 0.35 : 0.35}
       />
-
-      {/* Inner flowing line — the رواق "flow" current */}
-      <motion.path
-        d="M 50 90 V 58 C 50 43 34 43 34 28"
-        stroke="url(#riwaq-grad-2)"
-        strokeWidth="11"
-        strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.4, ease: "easeInOut", delay: 0.45 }}
+      {/* Centre arch (full opacity) */}
+      <path
+        d="M14 34 L14 18 A6 6 0 0 1 26 18 L26 34 Z"
+        fill={archColor}
       />
-
-      {/* Animated glow dot at the tip of the flow */}
-      <motion.circle
-        cx="34"
-        cy="28"
-        r="7"
-        fill="var(--accent-violet, #8B5CF6)"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.45, delay: 1.7 }}
-        filter="url(#riwaq-glow)"
+      {/* Right arch (35% opacity) */}
+      <path
+        d="M24 34 L24 18 A6 6 0 0 1 36 18 L36 34 Z"
+        fill={archColor}
+        opacity={paper ? 0.35 : 0.35}
       />
-      <motion.circle
-        cx="34"
-        cy="28"
-        r="3.5"
-        fill="var(--foreground, #ffffff)"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 0.9 }}
-        transition={{ duration: 0.3, delay: 1.85 }}
-      />
+      {/* Pulse dot at apex — brand mark identity, NOT a status indicator */}
+      <circle cx="20" cy="14" r="2" fill={dotColor} />
     </svg>
   );
 }

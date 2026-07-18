@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IEEE NUST DevFest 2026 · Riwaq</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@600&display=swap');
+
+html[data-theme="dark"]{
+  --bg:#0D1117; --surface:#161B22; --surface-2:#1D2430;
+  --text:#ECE3D0; --muted:#9CA3AF; --border:rgba(236,227,208,.14);
+  --verified:#3FA37D; --alert:#D9684E; --brass:#C9A04B;
+}
+html[data-theme="light"]{
+  --bg:#F3ECDC; --surface:#EAE0C9; --surface-2:#E2D6BB;
+  --text:#1C3344; --muted:#5C5648; --border:rgba(28,51,68,.18);
+  --verified:#146353; --alert:#8C3A2E; --brass:#A9823C;
+}
+:root{
+  --paper:#F3ECDC; --paper-ink:#1C3344; --paper-muted:#5C5648;
+  --cta-bg:#1B6B52; --cta-text:#F7F2E4;
+  --f-display:'Fraunces',serif; --f-body:'Archivo',sans-serif;
+  --f-mono:'IBM Plex Mono',monospace; --f-urdu:'Noto Nastaliq Urdu',serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--f-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+a{color:inherit;}
+button,input{font-family:inherit;}
+
+.topbar{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--border);}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-text{font-family:var(--f-display);font-weight:600;font-size:17px;}
+.theme-toggle{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:7px 12px;cursor:pointer;font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text);min-height:36px;}
+.theme-toggle:hover{border-color:var(--verified);}
+.theme-toggle:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.recap-toggle{background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-family:var(--f-mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;padding:7px 12px;cursor:pointer;min-height:36px;margin-right:8px;}
+.recap-toggle[aria-pressed="true"]{color:var(--brass);border-color:var(--brass);}
+
+.tag-bracket{position:relative;display:inline-flex;align-items:center;padding:3px 10px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;}
+.tag-bracket::before,.tag-bracket::after{content:'';position:absolute;top:0;bottom:0;width:5px;border-color:currentColor;}
+.tag-bracket::before{left:0;border-left:1.5px solid;border-top:1.5px solid;border-bottom:1.5px solid;}
+.tag-bracket::after{right:0;border-right:1.5px solid;border-top:1.5px solid;border-bottom:1.5px solid;}
+.tag-bracket.live{color:var(--verified);}
+.tag-bracket.past{color:var(--muted);}
+
+.hero{padding:30px 0 0;}
+.hero-grid{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;}
+@media (max-width:880px){.hero-grid{grid-template-columns:1fr;}}
+.cover-band{height:170px;background:linear-gradient(135deg, var(--surface-2), var(--surface));border:1px solid var(--border);position:relative;overflow:hidden;margin-bottom:18px;}
+.cover-band svg{position:absolute;inset:0;width:100%;height:100%;opacity:.5;}
+.category-tag{display:inline-flex;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--border);color:var(--muted);margin-bottom:12px;margin-left:8px;}
+.hero h1{font-family:var(--f-display);font-weight:500;font-size:30px;line-height:1.18;margin:0 0 10px;}
+.host-line{display:flex;align-items:center;gap:9px;font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-bottom:18px;}
+.host-line .crest{width:26px;height:26px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:10px;font-weight:600;color:var(--text);flex-shrink:0;}
+.host-line strong{color:var(--text);}
+.host-verified{display:inline-flex;align-items:center;gap:3px;color:var(--verified);}
+
+.info-card{background:var(--surface);border:1px solid var(--border);}
+.info-row{display:flex;gap:13px;padding:14px 16px;align-items:flex-start;}
+.info-row + .info-row{border-top:1px solid var(--border);}
+.info-icon{width:18px;height:18px;color:var(--muted);flex-shrink:0;margin-top:1px;}
+.info-text .label{font-family:var(--f-display);font-size:14px;font-weight:500;}
+.info-text .sub{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:3px;}
+.info-action{margin-left:auto;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.02em;color:var(--verified);background:none;border:none;cursor:pointer;padding:5px 0;white-space:nowrap;}
+.info-action:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.capacity-track{height:6px;background:var(--surface-2);margin-top:8px;overflow:hidden;width:100%;}
+.capacity-fill{height:100%;}
+
+.ticket-panel{position:sticky;top:74px;background:var(--surface);border:1px solid var(--border);padding:18px;}
+.ticket-panel h2{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;}
+.tier-row{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;cursor:pointer;}
+.tier-row[aria-pressed="true"]{border-color:var(--verified);background:var(--surface-2);}
+.tier-row:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.tier-name{font-family:var(--f-display);font-size:14px;font-weight:500;}
+.tier-meta{font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-top:3px;}
+.tier-price{font-family:var(--f-mono);font-size:13px;font-weight:600;}
+.qty-row{display:flex;align-items:center;justify-content:space-between;margin:14px 0;font-family:var(--f-mono);font-size:11px;color:var(--muted);}
+.qty-controls{display:flex;align-items:center;gap:10px;}
+.qty-btn{width:28px;height:28px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-family:var(--f-mono);}
+.qty-btn:hover{border-color:var(--verified);}
+.qty-btn:disabled{opacity:.4;cursor:not-allowed;}
+.qty-val{font-family:var(--f-display);font-size:15px;width:20px;text-align:center;}
+.total-row{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12.5px;border-top:1px solid var(--border);padding-top:12px;margin-bottom:14px;}
+.total-row strong{font-family:var(--f-display);font-size:16px;}
+.buy-btn{width:100%;background:var(--cta-bg);color:var(--cta-text);border:none;font-family:var(--f-mono);font-size:12px;letter-spacing:.03em;text-transform:uppercase;padding:13px 0;cursor:pointer;}
+.buy-btn:hover{opacity:.92;}
+.buy-btn:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
+.refund-note{font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-top:10px;line-height:1.6;}
+.wallet-row{display:flex;gap:6px;margin-top:12px;}
+.wallet-btn{flex:1;font-family:var(--f-mono);font-size:9px;letter-spacing:.02em;text-transform:uppercase;padding:8px 4px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);text-align:center;}
+
+.section{padding:30px 0;border-top:1px solid var(--border);}
+.section h2{font-family:var(--f-display);font-weight:500;font-size:20px;margin:0 0 14px;}
+.about-text{font-size:13.5px;color:var(--muted);line-height:1.75;max-width:680px;}
+
+.agenda-item{display:grid;grid-template-columns:80px 1fr;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);}
+.agenda-item:last-child{border-bottom:none;}
+.agenda-time{font-family:var(--f-mono);font-size:11px;color:var(--muted);}
+.agenda-title{font-family:var(--f-display);font-size:15px;font-weight:500;}
+.agenda-sub{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-top:3px;}
+
+.lineup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+.speaker-card{text-align:left;}
+.speaker-photo{width:100%;aspect-ratio:1;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:24px;font-weight:600;color:var(--muted);margin-bottom:8px;}
+.speaker-name{font-family:var(--f-display);font-size:13.5px;font-weight:500;}
+.speaker-role{font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-top:2px;}
+
+.avatar-row{display:flex;align-items:center;gap:0;margin-bottom:10px;}
+.avatar{width:34px;height:34px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:10px;font-weight:700;color:#fff;margin-left:-9px;}
+.avatar:first-child{margin-left:0;}
+.avatar-count{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-left:10px;}
+.friends-line{font-family:var(--f-mono);font-size:11.5px;color:var(--verified);margin-top:6px;}
+
+.faq-item{border-bottom:1px solid var(--border);}
+.faq-q{width:100%;text-align:left;background:none;border:none;color:var(--text);font-family:var(--f-display);font-size:14.5px;font-weight:500;padding:14px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.faq-q:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.faq-icon{font-family:var(--f-mono);font-size:14px;color:var(--muted);transition:transform .2s;}
+.faq-item[data-open="true"] .faq-icon{transform:rotate(45deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.faq-item[data-open="true"] .faq-a{max-height:200px;}
+.faq-a p{font-size:12.5px;color:var(--muted);line-height:1.7;padding:0 0 16px;margin:0;max-width:600px;}
+
+#event-mini-map{height:240px;width:100%;border:1px solid var(--border);}
+.leaflet-control-attribution{background:rgba(13,17,23,.7)!important;color:var(--muted)!important;font-size:9px!important;}
+.venue-line{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+.comment-row{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);}
+.comment-avatar{width:30px;height:30px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:10px;font-weight:700;flex-shrink:0;}
+.comment-body .cname{font-family:var(--f-display);font-size:13px;font-weight:500;}
+.comment-body .ctime{font-family:var(--f-mono);font-size:9.5px;color:var(--muted);margin-left:8px;}
+.comment-body p{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.6;}
+.comment-form{display:flex;gap:8px;margin-top:16px;}
+.comment-form input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12.5px;padding:10px 12px;}
+.comment-form button{background:var(--cta-bg);color:var(--cta-text);border:none;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.02em;text-transform:uppercase;padding:0 16px;cursor:pointer;}
+
+.related-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
+.related-card{flex:0 0 220px;background:var(--surface);border:1px solid var(--border);padding:14px;}
+.related-card .rcat{font-family:var(--f-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.related-card h4{font-family:var(--f-display);font-size:14px;font-weight:500;margin:6px 0 4px;}
+.related-card .rmeta{font-family:var(--f-mono);font-size:10px;color:var(--muted);}
+
+.recap-banner{background:var(--surface);border:1px solid var(--brass);border-left:3px solid var(--brass);padding:14px 16px;margin-bottom:20px;font-size:12.5px;color:var(--text);line-height:1.6;}
+.recap-stats{display:flex;gap:28px;flex-wrap:wrap;margin-top:10px;}
+.recap-stats .stat .num{font-family:var(--f-display);font-size:19px;font-weight:600;color:var(--brass);}
+.recap-stats .stat .label{font-family:var(--f-mono);font-size:9.5px;color:var(--muted);margin-top:2px;}
+
+footer{padding:36px 0 0;text-align:center;}
+footer .urdu{font-family:var(--f-urdu);font-size:17px;color:var(--text);margin-bottom:6px;}
+footer p{font-family:var(--f-mono);font-size:10px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="riwaq-landing-page-v3.html" style="text-decoration:none;">
+      <svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><path d="M4 34 L4 18 A6 6 0 0 1 16 18 L16 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/><path d="M14 34 L14 18 A6 6 0 0 1 26 18 L26 34 Z" fill="currentColor" style="color:var(--text)"/><path d="M24 34 L24 18 A6 6 0 0 1 36 18 L36 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/><circle cx="20" cy="14" r="2" fill="#146353" style="fill:var(--verified)"/></svg>
+      <span class="brand-text">Riwaq</span>
+    </a>
+    <div>
+      <button class="recap-toggle" id="recap-toggle" aria-pressed="false">View as: Live event</button>
+      <button class="theme-toggle" id="theme-toggle" aria-pressed="false" style="display:inline-flex;"><span id="theme-toggle-label">Dark mode</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hero">
+  <div id="recap-banner-wrap"></div>
+
+  <div class="hero-grid">
+    <div>
+      <div class="cover-band">
+        <svg viewBox="0 0 600 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g opacity="0.4" fill="var(--brass)">
+            <path d="M40 170 L40 110 A36 36 0 0 1 112 110 L112 170 Z"/>
+            <path d="M150 170 L150 130 A26 26 0 0 1 202 130 L202 170 Z" opacity="0.6"/>
+          </g>
+          <g opacity="0.3" fill="var(--verified)">
+            <path d="M460 170 L460 100 A40 40 0 0 1 540 100 L540 170 Z"/>
+          </g>
+        </svg>
+      </div>
+      <span class="tag-bracket live" id="status-tag">Upcoming</span>
+      <span class="category-tag">Tech fest</span>
+      <h1 id="event-title">IEEE NUST DevFest 2026</h1>
+      <div class="host-line">
+        <div class="crest">IE</div>
+        <span>Hosted by <a href="riwaq-societies-directory-v3.html" style="color:var(--text);font-weight:600;text-decoration:none;border-bottom:1px dotted var(--muted);">NUST IEEE Club</a></span>
+        <span class="host-verified">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Verified
+        </span>
+      </div>
+
+      <div class="info-card">
+        <div class="info-row">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="1"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div class="info-text"><div class="label">Sunday, 12 July 2026</div><div class="sub">9:00 AM &ndash; 6:00 PM (PKT)</div></div>
+          <button class="info-action" id="calendar-btn">Add to calendar</button>
+        </div>
+        <div class="info-row">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="info-text"><div class="label">SEECS, NUST H-12</div><div class="sub">Indus Loop, Islamabad</div></div>
+          <button class="info-action" id="map-jump">View map below</button>
+        </div>
+        <div class="info-row">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="info-text" style="width:100%;">
+            <div class="label" id="capacity-label">268 / 400 spots claimed</div>
+            <div class="capacity-track"><div class="capacity-fill" id="capacity-fill"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket-panel" id="ticket-panel">
+      <h2>Get your ticket</h2>
+      <div id="tier-list"></div>
+      <div class="qty-row">
+        <span>Quantity</span>
+        <div class="qty-controls">
+          <button class="qty-btn" id="qty-minus">&minus;</button>
+          <span class="qty-val" id="qty-val">1</span>
+          <button class="qty-btn" id="qty-plus">+</button>
+        </div>
+      </div>
+      <div class="total-row"><span>Total</span><strong id="total-price">PKR 500</strong></div>
+      <button class="buy-btn" id="buy-btn">Reserve tickets</button>
+      <div class="refund-note">Full refund up to 48 hours before the event. After that, tickets are transferable but non-refundable — see the FAQ below.</div>
+      <div class="wallet-row">
+        <div class="wallet-btn">Apple Wallet</div>
+        <div class="wallet-btn">Google Wallet</div>
+        <div class="wallet-btn">Samsung Wallet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="section">
+    <h2>About this event</h2>
+    <p class="about-text">A full day of talks, hands-on workshops, and project showcases covering AI, web, and embedded systems — run by NUST's IEEE Student Branch with support from industry mentors. Open to all NUST students regardless of school; no prior experience required for the morning sessions.</p>
+  </div>
+
+  <div class="section">
+    <h2>Schedule</h2>
+    <div id="agenda-list"></div>
+  </div>
+
+  <div class="section" id="speakers-section">
+    <h2>Speakers &amp; lineup</h2>
+    <div class="lineup-grid" id="lineup-grid"></div>
+  </div>
+
+  <div class="section">
+    <h2>Who's going</h2>
+    <div class="avatar-row" id="avatar-row"></div>
+    <div class="friends-line">3 people from your followed societies are going</div>
+  </div>
+
+  <div class="section">
+    <h2>Frequently asked</h2>
+    <div id="faq-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>Venue</h2>
+    <div id="event-mini-map"></div>
+    <div class="venue-line">SEECS &middot; Indus Loop, NUST H-12, Islamabad &middot; capacity 600</div>
+  </div>
+
+  <div class="section">
+    <h2>Discussion</h2>
+    <div id="comment-list"></div>
+    <div class="comment-form">
+      <input type="text" id="comment-input" placeholder="Ask a question or leave a note for the organisers…" aria-label="Write a comment">
+      <button id="comment-submit">Post</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>More from this category</h2>
+    <div class="related-row" id="related-row"></div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="urdu">رواق</div>
+  <p>RIWAQ &middot; NUST H-12 &middot; EVENT</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+var VENUE_COORDS = {
+  "SEECS":[33.642975,72.990737], "NBS":[33.6441026,72.9913595], "S3H":[33.6443811,72.9925797],
+  "Central Library":[33.6420856,72.992481], "Sports Complex":[33.6411359,72.9944962],
+  "NSTP":[33.6456729,72.9985536], "Jinnah Auditorium":[33.6432696,72.9934269]
+};
+var categoryLabels = {
+  tech_fest:"Tech fest", workshop:"Workshop", ceremony:"Ceremony", social_night:"Social night",
+  sports_adventure:"Sports & adventure", arts_culture:"Arts & culture",
+  community_drive:"Community drive", academic_competition:"Academic competition"
+};
+
+/* Five fully-built events. Every other event in the Riwaq calendar links back
+   here honestly only if it has an entry below — everything else routes to
+   the events calendar rather than faking a page. */
+var EVENTS = {
+  "ieee-devfest-2026": {
+    title:"IEEE NUST DevFest 2026", society:"NUST IEEE Club", venue:"SEECS", category:"tech_fest",
+    start:"2026-07-12T09:00:00", end:"2026-07-12T18:00:00", capacity:400, going:268,
+    about:"A full day of talks, hands-on workshops, and project showcases covering AI, web, and embedded systems — run by NUST's IEEE Student Branch with support from industry mentors. Open to all NUST students regardless of school; no prior experience required for the morning sessions.",
+    tiers:[
+      {id:"general", name:"General entry", meta:"Includes workshops + lunch", price:500},
+      {id:"early", name:"Early bird", meta:"First 50 tickets only — sold out", price:300, soldOut:true},
+      {id:"sponsor", name:"Sponsor pass", meta:"Reserved seating + swag bag", price:1500}
+    ],
+    agenda:[
+      {time:"09:00", title:"Registration & breakfast", sub:"SEECS lobby"},
+      {time:"10:00", title:"Opening keynote", sub:"Main auditorium"},
+      {time:"11:00", title:"Workshop track A: Embedded systems", sub:"Lab 3"},
+      {time:"13:00", title:"Lunch break", sub:"Courtyard"},
+      {time:"14:00", title:"Workshop track B: Web & AI", sub:"Lab 1"},
+      {time:"16:30", title:"Project showcase & demos", sub:"Main hall"},
+      {time:"17:30", title:"Closing & prizes", sub:"Main auditorium"}
+    ],
+    speakers:[
+      {name:"Hina Aftab", role:"Embedded Systems Lead, local tech co."},
+      {name:"Bilal Raza", role:"NUST IEEE Chair"},
+      {name:"Sana Tariq", role:"Alumni, ML Engineer"},
+      {name:"Faraz Khan", role:"NSTP Mentor"}
+    ],
+    faqs:[
+      {q:"Can I get a refund if I can't attend?", a:"Full refund up to 48 hours before the event. After that, tickets become transferable but non-refundable — use the share/transfer option on your ticket page to pass it to someone else."},
+      {q:"Is this open to students outside SEECS?", a:"Yes — DevFest is open to all NUST students regardless of school. The afternoon AI track assumes some Python familiarity; the embedded systems track is beginner-friendly."},
+      {q:"What should I bring?", a:"A laptop if you want to follow along with the workshops. Lunch and refreshments are included in every ticket tier."},
+      {q:"Is there parking near SEECS?", a:"Limited visitor parking is available near the SEECS main gate. Walking or campus transport from the hostels is recommended given expected turnout."}
+    ],
+    comments:[
+      {name:"Zara M.", text:"Does the embedded systems track need any prior Arduino experience?", time:"2h ago"},
+      {name:"NUST IEEE Club", text:"No prior experience needed for the morning track — we start from the basics.", time:"1h ago"}
+    ],
+    rating:"4.7"
+  },
+  "chess-summer-open-2026": {
+    title:"NUST Chess Club Summer Open", society:"NUST Chess Club", venue:"Central Library", category:"academic_competition",
+    start:"2026-06-22T14:00:00", end:"2026-06-22T19:00:00", capacity:64, going:41,
+    about:"A rapid-format chess tournament open to all NUST students, run in the library's group study hall. Swiss-system pairing across 6 rounds, 10 minutes per side. Boards, clocks, and sets are provided — just bring your student card.",
+    tiers:[
+      {id:"general", name:"Tournament entry", meta:"All 6 rounds, boards provided", price:0}
+    ],
+    agenda:[
+      {time:"14:00", title:"Check-in & pairings posted", sub:"Library group study hall"},
+      {time:"14:30", title:"Round 1 – 3", sub:"Swiss pairing, 10 min/side"},
+      {time:"17:00", title:"Break & standings update", sub:""},
+      {time:"17:30", title:"Round 4 – 6", sub:""},
+      {time:"19:00", title:"Prizes & closing", sub:"Top 3 boards"}
+    ],
+    speakers:[],
+    faqs:[
+      {q:"Do I need to be a rated player?", a:"No — this is open to anyone, rated or unrated. Pairings are seeded by self-reported strength in round 1, then by results after that."},
+      {q:"What happens if I lose a round?", a:"Swiss system means you keep playing all 6 rounds regardless of result — you're paired against players with a similar score so far."},
+      {q:"Is this free?", a:"Yes, entry is free for all NUST students. Just bring your student card to check in."}
+    ],
+    comments:[
+      {name:"Talha N.", text:"Is there a beginners bracket or is it all one pool?", time:"5h ago"},
+      {name:"NUST Chess Club", text:"One pool, but Swiss pairing means you won't face the top seeds early on if you're new.", time:"3h ago"}
+    ],
+    rating:"4.5"
+  },
+  "dramatics-summer-showcase-2026": {
+    title:"NUST Dramatics Club: Summer Showcase", society:"NUST Dramatics Club", venue:"Jinnah Auditorium", category:"arts_culture",
+    start:"2026-07-18T18:00:00", end:"2026-07-18T21:00:00", capacity:1200, going:610,
+    about:"An evening of short plays and performances written and performed entirely by NUST students — three one-act pieces spanning comedy, drama, and physical theatre, followed by a cast Q&A. The Dramatics Club's biggest production of the summer term.",
+    tiers:[
+      {id:"general", name:"General seating", meta:"Open seating, doors at 5:30 PM", price:400},
+      {id:"vip", name:"VIP front rows", meta:"Reserved seating, rows A–C", price:900}
+    ],
+    agenda:[
+      {time:"17:30", title:"Doors open", sub:"Jinnah Auditorium lobby"},
+      {time:"18:00", title:"Act I — comedy one-act", sub:""},
+      {time:"18:45", title:"Intermission", sub:"Lobby refreshments"},
+      {time:"19:00", title:"Act II — drama one-act", sub:""},
+      {time:"19:45", title:"Act III — physical theatre", sub:""},
+      {time:"20:30", title:"Cast Q&A", sub:"On-stage, open floor"}
+    ],
+    speakers:[
+      {name:"Mehak Ilyas", role:"Director, Act II"},
+      {name:"Daniyal Sheikh", role:"Dramatics Club President"},
+      {name:"Noor Fatima", role:"Lead, Act I"}
+    ],
+    faqs:[
+      {q:"Is this suitable for all ages?", a:"Yes — all three pieces are written and rated for a general campus audience."},
+      {q:"Can I get a refund?", a:"Full refund up to 48 hours before curtain. After that, tickets are transferable but non-refundable."},
+      {q:"How long is the full show?", a:"About 2.5 hours including a 15-minute intermission and the post-show Q&A."}
+    ],
+    comments:[
+      {name:"Sana T.", text:"Are the VIP seats worth it or is general seating fine?", time:"1d ago"},
+      {name:"NUST Dramatics Club", text:"General has a great view from row D back — VIP mainly matters if you want to be right up front.", time:"20h ago"}
+    ],
+    rating:"4.9"
+  },
+  "ncsc-blood-donation-2026": {
+    title:"Blood Donation Drive", society:"NUST Community Service Club", venue:"S3H", category:"community_drive",
+    start:"2026-08-10T10:00:00", end:"2026-08-11T16:00:00", capacity:400, going:91,
+    about:"Campus-wide blood donation drive run with the National Blood Transfusion Programme, following the Community Service Club's established annual format. Open across two days to make it easier to fit around exams and labs. Free health screening included for every donor.",
+    tiers:[
+      {id:"general", name:"Register to donate", meta:"Free health screening included", price:0}
+    ],
+    agenda:[
+      {time:"10:00", title:"Drive opens — Day 1", sub:"S3H ground floor hall"},
+      {time:"12:00", title:"Peak slot — book ahead recommended", sub:""},
+      {time:"16:00", title:"Day 1 closes", sub:""},
+      {time:"10:00", title:"Drive resumes — Day 2", sub:"10 Aug → 11 Aug"},
+      {time:"16:00", title:"Drive closes, totals announced", sub:""}
+    ],
+    speakers:[],
+    faqs:[
+      {q:"Who can donate?", a:"Most healthy students aged 17+ and over 50kg. A quick health screening on-site confirms eligibility for first-time donors."},
+      {q:"Do I need to book a slot?", a:"Walk-ins are welcome, but the midday slot gets busy — registering ahead through Riwaq guarantees a faster turnaround."},
+      {q:"What should I do before donating?", a:"Eat a proper meal and stay hydrated beforehand. Avoid donating on an empty stomach."}
+    ],
+    comments:[
+      {name:"Usman F.", text:"Is there a faster lane for repeat donors?", time:"6h ago"},
+      {name:"NUST Community Service Club", text:"Yes — bring your card from last time and check in at the express desk.", time:"4h ago"}
+    ],
+    rating:"4.8"
+  },
+  "adventure-club-trip-2026": {
+    title:"NUST Adventure Club: Trail Hike", society:"NUST Adventure Club", venue:"Sports Complex", category:"sports_adventure",
+    start:"2026-07-05T06:30:00", end:"2026-07-05T18:00:00", capacity:50, going:33,
+    about:"A day-trip hike to a trail outside Islamabad — transport, a trained trip lead, and a basic gear checklist all included. Meet at the Sports Complex gate for an early departure; back on campus by early evening. Open to all fitness levels on the lead's call.",
+    tiers:[
+      {id:"general", name:"Trip seat", meta:"Transport + trail lead + gear check", price:1200}
+    ],
+    agenda:[
+      {time:"06:30", title:"Meet at Sports Complex gate", sub:"Gear check before departure"},
+      {time:"07:00", title:"Depart by coach", sub:""},
+      {time:"09:30", title:"Trailhead — hike begins", sub:""},
+      {time:"13:00", title:"Lunch stop on trail", sub:"Bring your own packed lunch"},
+      {time:"16:00", title:"Return to coach", sub:""},
+      {time:"18:00", title:"Back at Sports Complex", sub:""}
+    ],
+    speakers:[],
+    faqs:[
+      {q:"What fitness level is needed?", a:"Moderate — the trail involves a few steep sections but is manageable for most regular walkers. The trip lead sets a pace for the group."},
+      {q:"What should I bring?", a:"Comfortable hiking shoes, a refillable water bottle, sunscreen, and a packed lunch. A gear checklist is shared after booking."},
+      {q:"Is transport really included?", a:"Yes — round-trip coach transport from the Sports Complex is part of the ticket price."}
+    ],
+    comments:[
+      {name:"Hamza R.", text:"Is this beginner-friendly or more for experienced hikers?", time:"2d ago"},
+      {name:"NUST Adventure Club", text:"Beginner-friendly — we always set the pace for the slowest comfortable walker in the group.", time:"1d ago"}
+    ],
+    rating:"4.6"
+  }
+};
+
+var params = new URLSearchParams(window.location.search);
+var eventId = params.get('event') || 'ieee-devfest-2026';
+var EVENT = EVENTS[eventId] || EVENTS['ieee-devfest-2026'];
+EVENT.coords = VENUE_COORDS[EVENT.venue] || VENUE_COORDS['SEECS'];
+
+/* ---------------- Populate static text from the loaded event ---------------- */
+document.title = EVENT.title + ' · Riwaq';
+document.getElementById('event-title').textContent = EVENT.title;
+document.querySelector('.category-tag').textContent = categoryLabels[EVENT.category] || 'Event';
+document.querySelector('.host-line a').textContent = EVENT.society;
+document.querySelector('.host-line .crest').textContent = EVENT.society.split(' ').filter(function(w){return w.length>2;}).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+document.querySelector('.about-text').textContent = EVENT.about;
+
+var startD = new Date(EVENT.start+"+05:00");
+var endD = new Date(EVENT.end+"+05:00");
+var sameDay = EVENT.start.slice(0,10)===EVENT.end.slice(0,10);
+document.querySelectorAll('.info-text .label')[0].textContent = startD.toLocaleDateString('en-US',{weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Karachi'});
+document.querySelectorAll('.info-text .sub')[0].textContent = startD.toLocaleTimeString('en-US',{hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi'}) + ' \u2013 ' + endD.toLocaleTimeString('en-US',{hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi'}) + (sameDay ? ' (PKT)' : ' next day (PKT)');
+document.querySelectorAll('.info-text .label')[1].textContent = EVENT.venue + ', NUST H-12';
+
+var toggle=document.getElementById('theme-toggle');
+var toggleLabel=document.getElementById('theme-toggle-label');
+var theme=(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+  toggle.setAttribute('aria-pressed', String(theme==='light'));
+  toggleLabel.textContent = theme==='light' ? 'Light mode' : 'Dark mode';
+  if(miniMap){ miniMap.removeLayer(activeTile); activeTile = theme==='light'?tileLight:tileDark; activeTile.addTo(miniMap); }
+}
+toggle.addEventListener('click', function(){ theme=theme==='dark'?'light':'dark'; applyTheme(); });
+
+var recapToggle=document.getElementById('recap-toggle');
+var isRecap=false;
+recapToggle.addEventListener('click', function(){
+  isRecap=!isRecap;
+  recapToggle.setAttribute('aria-pressed', String(isRecap));
+  recapToggle.textContent = isRecap ? 'View as: Past event' : 'View as: Live event';
+  renderRecapState();
+});
+function renderRecapState(){
+  var statusTag=document.getElementById('status-tag');
+  var ticketPanel=document.getElementById('ticket-panel');
+  var bannerWrap=document.getElementById('recap-banner-wrap');
+  if(isRecap){
+    statusTag.textContent='Past event';
+    statusTag.className='tag-bracket past';
+    ticketPanel.style.display='none';
+    bannerWrap.innerHTML='<div class="recap-banner">This event has concluded — shown here in recap mode. Ticket sales are closed; this is what attendees and future organisers see afterward.<div class="recap-stats"><div class="stat"><div class="num">'+EVENT.going+'</div><div class="label">Final attendance</div></div><div class="stat"><div class="num">'+Math.round(EVENT.going/EVENT.capacity*100)+'%</div><div class="label">Capacity reached</div></div><div class="stat"><div class="num">'+EVENT.rating+'</div><div class="label">Average rating</div></div></div></div>';
+  } else {
+    statusTag.textContent='Upcoming';
+    statusTag.className='tag-bracket live';
+    ticketPanel.style.display='block';
+    bannerWrap.innerHTML='';
+  }
+}
+
+function toUTCStamp(dateStr){ var d=new Date(dateStr+"+05:00"); return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; }
+var pct=Math.round(EVENT.going/EVENT.capacity*100);
+document.getElementById('capacity-label').textContent=EVENT.going+' / '+EVENT.capacity+' spots claimed';
+document.getElementById('capacity-fill').style.width=pct+'%';
+document.getElementById('capacity-fill').style.background = pct<60?'var(--verified)':pct<90?'var(--brass)':'var(--alert)';
+
+document.getElementById('calendar-btn').addEventListener('click', function(){
+  var ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Riwaq//Events//EN","BEGIN:VEVENT",
+    "DTSTART:"+toUTCStamp(EVENT.start),"DTEND:"+toUTCStamp(EVENT.end),"SUMMARY:"+EVENT.title,
+    "LOCATION:"+EVENT.venue+"\\, NUST H-12\\, Islamabad","DESCRIPTION:Hosted by "+EVENT.society+". Via Riwaq.",
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+  var blob=new Blob([ics],{type:"text/calendar"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a'); a.href=url; a.download=eventId+".ics";
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+document.getElementById('map-jump').addEventListener('click', function(){
+  document.getElementById('event-mini-map').scrollIntoView({behavior:'smooth', block:'center'});
+});
+
+var selectedTier=EVENT.tiers[0].id;
+var qty=1;
+function renderTiers(){
+  document.getElementById('tier-list').innerHTML = EVENT.tiers.map(function(t){
+    return '<div class="tier-row" data-tier="'+t.id+'" tabindex="'+(t.soldOut?-1:0)+'" role="button" aria-pressed="'+(selectedTier===t.id)+'" style="'+(t.soldOut?'opacity:.45;cursor:not-allowed;':'')+'"><div><div class="tier-name">'+t.name+(t.soldOut?' — Sold out':'')+'</div><div class="tier-meta">'+t.meta+'</div></div><div class="tier-price">'+(t.price===0?'Free':'PKR '+t.price.toLocaleString())+'</div></div>';
+  }).join('');
+  document.querySelectorAll('.tier-row').forEach(function(row){
+    var tier=EVENT.tiers.find(function(t){ return t.id===row.dataset.tier; });
+    if(tier.soldOut) return;
+    row.addEventListener('click', function(){ selectedTier=row.dataset.tier; renderTiers(); updateTotal(); });
+  });
+}
+function updateTotal(){
+  var tier=EVENT.tiers.find(function(t){ return t.id===selectedTier; });
+  document.getElementById('total-price').textContent = tier.price===0 ? 'Free' : 'PKR '+(tier.price*qty).toLocaleString();
+}
+document.getElementById('qty-minus').addEventListener('click', function(){ if(qty>1){ qty--; document.getElementById('qty-val').textContent=qty; updateTotal(); } });
+document.getElementById('qty-plus').addEventListener('click', function(){ if(qty<8){ qty++; document.getElementById('qty-val').textContent=qty; updateTotal(); } });
+document.getElementById('buy-btn').addEventListener('click', function(){
+  var tier=EVENT.tiers.find(function(t){ return t.id===selectedTier; });
+  var proceed=confirm('Reserving '+qty+' x '+tier.name+' ('+(tier.price===0?'Free':'PKR '+(tier.price*qty).toLocaleString())+')\n\nReal checkout — JazzCash, Easypaisa, card, or Raast — connects here once payments are live. Continue to view your ticket?');
+  if(proceed) window.location.href='riwaq-ticket-detail.html';
+});
+
+document.getElementById('agenda-list').innerHTML = EVENT.agenda.map(function(a){
+  return '<div class="agenda-item"><div class="agenda-time">'+a.time+'</div><div><div class="agenda-title">'+a.title+'</div><div class="agenda-sub">'+a.sub+'</div></div></div>';
+}).join('');
+
+function initials(name){ return name.split(' ').map(function(p){return p[0];}).join(''); }
+var speakersSection=document.getElementById('speakers-section');
+if(EVENT.speakers && EVENT.speakers.length){
+  speakersSection.style.display='block';
+  document.getElementById('lineup-grid').innerHTML = EVENT.speakers.map(function(s){
+    return '<div class="speaker-card"><div class="speaker-photo">'+initials(s.name)+'</div><div class="speaker-name">'+s.name+'</div><div class="speaker-role">'+s.role+'</div></div>';
+  }).join('');
+} else {
+  speakersSection.style.display='none';
+}
+
+var names=["Ayesha K.","Hamza R.","Fatima S.","Talha N.","Zara M.","Bilal A.","Sana T.","Usman F."];
+var colors=["#3FA37D","#C9A04B","#5B8DEF","#D9684E","#8C3A2E","#A78BFA","#4ADE80","#F472B6"];
+document.getElementById('avatar-row').innerHTML = names.map(function(n,i){
+  var init=n.split(' ').map(function(p){return p[0];}).join('');
+  return '<div class="avatar" style="background:'+colors[i%colors.length]+'" title="'+n+'">'+init+'</div>';
+}).join('') + '<span class="avatar-count">'+EVENT.going+' going</span>';
+
+document.getElementById('faq-list').innerHTML = EVENT.faqs.map(function(f,i){
+  return '<div class="faq-item" data-open="false" data-idx="'+i+'"><button class="faq-q" aria-expanded="false">'+f.q+'<span class="faq-icon">+</span></button><div class="faq-a"><p>'+f.a+'</p></div></div>';
+}).join('');
+document.querySelectorAll('.faq-q').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var item=btn.closest('.faq-item');
+    var open=item.dataset.open==='true';
+    item.dataset.open=String(!open);
+    btn.setAttribute('aria-expanded', String(!open));
+  });
+});
+
+var miniMap=null, tileDark=null, tileLight=null, activeTile=null;
+miniMap=L.map('event-mini-map',{scrollWheelZoom:false, zoomControl:true});
+tileDark=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20});
+tileLight=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20});
+activeTile=theme==='light'?tileLight:tileDark;
+activeTile.addTo(miniMap);
+miniMap.setView(EVENT.coords, 16);
+var venueIcon=L.divIcon({
+  className:'',
+  html:'<div style="width:30px;height:30px;border-radius:50%;background:var(--brass);border:2px solid var(--cta-text);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.4);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D1117" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>',
+  iconSize:[30,30], iconAnchor:[15,15]
+});
+L.marker(EVENT.coords,{icon:venueIcon}).addTo(miniMap).bindTooltip(EVENT.venue, {direction:'top', offset:[0,-10]});
+document.querySelector('.venue-line').textContent = EVENT.venue + ' \u00b7 NUST H-12, Islamabad';
+
+var liveComments=EVENT.comments.slice();
+function renderComments(){
+  document.getElementById('comment-list').innerHTML = liveComments.map(function(c){
+    return '<div class="comment-row"><div class="comment-avatar">'+c.name.split(' ').map(function(p){return p[0];}).join('')+'</div><div class="comment-body"><span class="cname">'+c.name+'</span><span class="ctime">'+c.time+'</span><p>'+c.text+'</p></div></div>';
+  }).join('');
+}
+renderComments();
+document.getElementById('comment-submit').addEventListener('click', function(){
+  var input=document.getElementById('comment-input');
+  if(!input.value.trim()) return;
+  liveComments.push({name:"You", text:input.value.trim(), time:"now"});
+  input.value='';
+  renderComments();
+});
+document.getElementById('comment-input').addEventListener('keydown', function(e){
+  if(e.key==='Enter') document.getElementById('comment-submit').click();
+});
+
+var otherIds = Object.keys(EVENTS).filter(function(id){ return id!==eventId; });
+document.getElementById('related-row').innerHTML = otherIds.map(function(id){
+  var e = EVENTS[id];
+  var d = new Date(e.start+"+05:00");
+  var dateLabel = d.toLocaleDateString('en-US',{day:'2-digit', month:'short', timeZone:'Asia/Karachi'}).toUpperCase();
+  return '<a class="related-card" href="riwaq-event-page-v3.html?event='+id+'" style="text-decoration:none;color:inherit;display:block;"><div class="rcat">'+categoryLabels[e.category]+'</div><h4>'+e.title+'</h4><div class="rmeta">'+dateLabel+' &middot; '+e.venue+'</div></a>';
+}).join('');
+
+applyTheme();
+renderTiers();
+updateTotal();
+renderRecapState();
+</script>
+</body>
+</html>

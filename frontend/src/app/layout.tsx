@@ -1,31 +1,35 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Scheherazade_New } from "next/font/google";
+import { Fraunces, Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import SwRegister from "./sw-register";
 import Navbar from "./navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/** Display — serif with ink-trap detailing, used for headlines & names */
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+/** Body — architectural grotesque, used for paragraph text */
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  display: "swap",
 });
 
-/** Scheherazade New — an award-winning Arabic font by SIL, ideal for رواق */
-const arabicFont = Scheherazade_New({
-  weight: ["400", "700"],
-  subsets: ["arabic"],
-  variable: "--font-arabic",
+/** Mono — codes, IDs, timestamps, all-caps eyebrow text */
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex-mono",
+  subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Riwaq",
-    template: "%s • Riwaq",
+    default: "Riwaq — The courtyard campus life happens in",
+    template: "%s · Riwaq",
   },
   applicationName: "Riwaq",
   description:
@@ -76,8 +80,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Noto Nastaliq Urdu — loaded via <link> since next/font/google doesn't reliably support Nastaliq subsets */}
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${arabicFont.variable} antialiased`}
+        className={`${fraunces.variable} ${archivo.variable} ${ibmPlexMono.variable} antialiased`}
       >
         <SwRegister />
         <Navbar />

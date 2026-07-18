@@ -710,70 +710,77 @@ export default function AdminPage() {
 
   if (!isAuthed) {
     return (
-      <div className="app-shell flex items-center justify-center min-h-screen relative overflow-hidden bg-[radial-gradient(ellipse_at_top,rgba(220,38,38,0.05),transparent_50%)]">
-        <div className="absolute inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
-
+      <div className="app-shell flex items-center justify-center min-h-screen">
         <form
           onSubmit={login}
-          className="relative z-10 block-card p-10 w-full max-w-md space-y-6 rounded-3xl border border-red-500/20 shadow-[0_0_50px_rgba(220,38,38,0.08)] bg-[var(--foreground)]/5 backdrop-blur-xl"
+          className="block-card p-10 w-full max-w-md space-y-6 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]"
         >
           <div className="mb-2">
             <BackButton href="/" label="Back to Home" />
           </div>
 
           <div className="flex flex-col items-center text-center space-y-2 pb-4">
-            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
-              <ShieldAlert className="w-8 h-8 text-red-500" />
+            <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center mb-2">
+              <ShieldAlert className="w-8 h-8 text-[var(--alert)]" />
             </div>
-            <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400">
+            <h1 className="text-3xl font-display font-medium text-[var(--text)]">
               Admin Portal
             </h1>
-            <p className="text-sm text-[var(--fg-muted)]">
-              Operations Control Room. Secure login required.
+            <p className="text-xs text-[var(--muted)] font-mono uppercase tracking-wider">
+              Operations Control Room &middot; Secure Auth
             </p>
           </div>
 
           <div className="space-y-4">
-            <div className="relative">
-              <input
-                title="Username"
-                placeholder="Username"
-                className="field pl-11 rounded-xl bg-[var(--fg)]/5 border-transparent focus:border-red-500/50"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-              />
-              <Users className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+            <div>
+              <label className="section-label block mb-1">Username</label>
+              <div className="relative">
+                <input
+                  title="Username"
+                  placeholder="Username"
+                  className="field pl-11"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                />
+                <Users className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              </div>
             </div>
 
-            <div className="relative">
-              <input
-                title="Password"
-                placeholder="Password"
-                type="password"
-                className="field pl-11 rounded-xl bg-[var(--fg)]/5 border-transparent focus:border-red-500/50"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-              <Lock className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+            <div>
+              <label className="section-label block mb-1">Password</label>
+              <div className="relative">
+                <input
+                  title="Password"
+                  placeholder="Password"
+                  type="password"
+                  className="field pl-11"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              </div>
             </div>
 
-            <div className="relative">
-              <input
-                title="OTP"
-                placeholder="Authenticator OTP"
-                className="field pl-11 rounded-xl bg-[var(--fg)]/5 border-transparent focus:border-red-500/50 tracking-widest font-mono font-bold"
-                value={otp}
-                onChange={(event) => setOtp(event.target.value)}
-              />
-              <KeyRound className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+            <div>
+              <label className="section-label block mb-1">Authenticator OTP</label>
+              <div className="relative">
+                <input
+                  title="OTP"
+                  placeholder="OTP"
+                  className="field pl-11 tracking-widest font-mono font-bold"
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value)}
+                />
+                <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              </div>
             </div>
           </div>
 
           <button
-            className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-xl font-bold tracking-wide shadow-lg shadow-red-500/25 transition-all transform active:scale-95"
+            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
             type="submit"
           >
-            Authenticate
+            Authenticate Control Room
           </button>
         </form>
       </div>
@@ -1094,7 +1101,7 @@ export default function AdminPage() {
                   <input
                     title="Manager username"
                     placeholder="Manager username"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="field"
                     value={managerForm.username}
                     onChange={(event) =>
                       setManagerForm({
@@ -1107,7 +1114,7 @@ export default function AdminPage() {
                     title="Manager password"
                     type="password"
                     placeholder="Temporary password"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="field"
                     value={managerForm.password}
                     onChange={(event) =>
                       setManagerForm({
@@ -1118,7 +1125,7 @@ export default function AdminPage() {
                   />
                   <select
                     title="Plan tier"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="field"
                     value={managerForm.plan_tier}
                     onChange={(event) =>
                       setManagerForm({
@@ -1134,7 +1141,7 @@ export default function AdminPage() {
                   <input
                     title="Society name"
                     placeholder="Society name"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="field"
                     value={managerForm.society_name}
                     onChange={(event) =>
                       setManagerForm({
@@ -1145,7 +1152,7 @@ export default function AdminPage() {
                   />
                   <button
                     onClick={createManager}
-                    className="w-full bg-background/80 text-white rounded-lg py-2 font-semibold"
+                    className="btn-primary w-full"
                   >
                     Create Manager
                   </button>
@@ -1154,7 +1161,7 @@ export default function AdminPage() {
                     <input
                       title="Grant user id"
                       placeholder="User ID"
-                      className="w-full border rounded-lg px-3 py-2 mb-2"
+                      className="field mb-2"
                       value={grantForm.user_id}
                       onChange={(event) =>
                         setGrantForm({
@@ -1166,7 +1173,7 @@ export default function AdminPage() {
                     <input
                       title="Grant event id"
                       placeholder="Event ID"
-                      className="w-full border rounded-lg px-3 py-2 mb-2"
+                      className="field mb-2"
                       value={grantForm.event_id}
                       onChange={(event) =>
                         setGrantForm({
@@ -1177,7 +1184,7 @@ export default function AdminPage() {
                     />
                     <button
                       onClick={grantEventAccess}
-                      className="w-full bg-indigo-600 text-white rounded-lg py-2 font-semibold"
+                      className="btn-primary w-full"
                     >
                       Grant Event Access
                     </button>
@@ -1194,26 +1201,26 @@ export default function AdminPage() {
               <input
                 title="Scanner code label"
                 placeholder="Label (e.g. Main Gate OC)"
-                className="w-full border rounded-lg px-3 py-2 mb-2"
+                className="field mb-2"
                 value={scannerCodeLabel}
                 onChange={(event) => setScannerCodeLabel(event.target.value)}
               />
               <input
                 title="Scanner code"
                 placeholder="Create scanner code"
-                className="w-full border rounded-lg px-3 py-2 mb-2"
+                className="field mb-2"
                 value={scannerCodeValue}
                 onChange={(event) => setScannerCodeValue(event.target.value)}
               />
               <button
                 onClick={createScannerCode}
-                className="w-full bg-emerald-600 text-white rounded-lg py-2 font-semibold"
+                className="btn-primary w-full"
               >
                 Create Scanner Code
               </button>
               <div className="mt-3 space-y-2 max-h-32 overflow-auto">
                 {scannerCodes.map((code) => (
-                  <div key={code.id} className="border rounded-lg p-2 text-xs">
+                  <div key={code.id} className="border border-[var(--border)] p-2 text-xs bg-[var(--surface-2)]">
                     <p className="font-semibold">
                       {code.label || "Scanner Code"}
                     </p>
@@ -1231,7 +1238,7 @@ export default function AdminPage() {
                 <input
                   title="Scanner device label"
                   placeholder="Device label"
-                  className="w-full border rounded-lg px-3 py-2 mb-2"
+                  className="field mb-2"
                   value={scannerDeviceLabel}
                   onChange={(event) =>
                     setScannerDeviceLabel(event.target.value)
@@ -1240,13 +1247,13 @@ export default function AdminPage() {
                 <input
                   title="Scanner device id"
                   placeholder="Device ID from scanner login screen"
-                  className="w-full border rounded-lg px-3 py-2 mb-2"
+                  className="field mb-2"
                   value={scannerDeviceId}
                   onChange={(event) => setScannerDeviceId(event.target.value)}
                 />
                 <button
                   onClick={registerScannerDevice}
-                  className="w-full bg-sky-600 text-white rounded-lg py-2 font-semibold"
+                  className="btn-primary w-full"
                 >
                   Register Device
                 </button>
@@ -1254,7 +1261,7 @@ export default function AdminPage() {
                   {scannerDevices.map((device) => (
                     <div
                       key={device.id}
-                      className="text-[10px] border rounded p-2"
+                      className="text-[10px] border border-[var(--border)] p-2 bg-[var(--surface-2)]"
                     >
                       <p className="font-semibold">
                         {device.label || "Scanner Device"}
@@ -1273,7 +1280,7 @@ export default function AdminPage() {
                 <h2 className="font-bold text-lg mb-3">Manager 2FA</h2>
                 <button
                   onClick={setupManager2FA}
-                  className="w-full bg-background/80 text-white rounded-lg py-2 font-semibold mb-2"
+                  className="btn-secondary w-full mb-2"
                 >
                   Setup Authenticator
                 </button>
@@ -1281,20 +1288,20 @@ export default function AdminPage() {
                   <textarea
                     title="2FA setup details"
                     readOnly
-                    className="w-full border rounded-lg px-3 py-2 text-xs h-20 mb-2"
+                    className="textarea text-xs h-20 mb-2"
                     value={twoFaSecret}
                   />
                 )}
                 <input
                   title="2FA OTP"
                   placeholder="Enter OTP to enable"
-                  className="w-full border rounded-lg px-3 py-2 mb-2"
+                  className="field mb-2"
                   value={twoFaOtp}
                   onChange={(event) => setTwoFaOtp(event.target.value)}
                 />
                 <button
                   onClick={enableManager2FA}
-                  className="w-full bg-emerald-600 text-white rounded-lg py-2 font-semibold"
+                  className="btn-primary w-full"
                 >
                   Enable 2FA
                 </button>
@@ -1355,7 +1362,7 @@ export default function AdminPage() {
               </div>
               <select
                 title="Event"
-                className="w-full border rounded-lg px-3 py-2"
+                className="field"
                 value={selectedEventId}
                 onChange={(event) => setSelectedEventId(event.target.value)}
               >
@@ -1378,7 +1385,7 @@ export default function AdminPage() {
               <form onSubmit={createTicket} className="space-y-2">
                 <select
                   title="Event"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={selectedEventId}
                   onChange={(event) => setSelectedEventId(event.target.value)}
                 >
@@ -1393,7 +1400,7 @@ export default function AdminPage() {
                 <input
                   title="Holder Name"
                   placeholder="Holder Name"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.holder_name}
                   onChange={(event) =>
                     setTicketForm({
@@ -1406,7 +1413,7 @@ export default function AdminPage() {
                 <input
                   title="Seat"
                   placeholder="Seat (optional)"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.seat}
                   onChange={(event) =>
                     setTicketForm({ ...ticketForm, seat: event.target.value })
@@ -1415,7 +1422,7 @@ export default function AdminPage() {
                 <input
                   title="Department"
                   placeholder="Department"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.department}
                   onChange={(event) =>
                     setTicketForm({
@@ -1427,7 +1434,7 @@ export default function AdminPage() {
                 <input
                   title="Year"
                   placeholder="Year (e.g. 1st, 2nd, Alumni)"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.year}
                   onChange={(event) =>
                     setTicketForm({
@@ -1438,7 +1445,7 @@ export default function AdminPage() {
                 />
                 <select
                   title="Attendee type"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.attendee_type}
                   onChange={(event) =>
                     setTicketForm({
@@ -1455,7 +1462,7 @@ export default function AdminPage() {
                 <input
                   title="Interests"
                   placeholder="Interests (comma-separated)"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.interests}
                   onChange={(event) =>
                     setTicketForm({
@@ -1466,7 +1473,7 @@ export default function AdminPage() {
                 />
                 <select
                   title="Role"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.role}
                   onChange={(event) =>
                     setTicketForm({ ...ticketForm, role: event.target.value })
@@ -1479,7 +1486,7 @@ export default function AdminPage() {
                 </select>
                 <select
                   title="Ticket Type"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={ticketForm.ticket_type}
                   onChange={(event) =>
                     setTicketForm({
@@ -1508,20 +1515,20 @@ export default function AdminPage() {
                   title="Bulk count"
                   type="number"
                   min={1}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="field"
                   value={bulkCount}
                   onChange={(event) => setBulkCount(Number(event.target.value))}
                 />
                 <button
                   onClick={bulkGenerate}
-                  className="bg-background/80 text-white rounded-lg px-3"
+                  className="btn-secondary px-3"
                 >
                   Generate
                 </button>
               </div>
               <textarea
                 title="CSV"
-                className="w-full border rounded-lg px-3 py-2 h-32 text-xs"
+                className="textarea h-32 text-xs"
                 value={csvInput}
                 onChange={(event) => setCsvInput(event.target.value)}
               />
@@ -1542,7 +1549,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={importCsv}
-                className="mt-2 w-full bg-indigo-600 text-white rounded-lg py-2 font-semibold"
+                className="btn-primary w-full mt-2"
               >
                 Import CSV
               </button>
@@ -1555,7 +1562,7 @@ export default function AdminPage() {
                 <h3 className="text-green-800 font-bold mb-2 flex items-center">
                   <QrCode className="w-5 h-5 mr-2" /> Ticket Created
                 </h3>
-                <div className="glass-soft p-4 rounded-lg border border-[var(--border)] flex justify-between items-center">
+                <div className="border border-[var(--border)] p-4 flex justify-between items-center bg-[var(--surface-2)]">
                   <div>
                     <p className="font-bold text-[var(--foreground)] opacity-70">
                       {createdTicket.holder_name}
@@ -1569,7 +1576,7 @@ export default function AdminPage() {
                     href={`/ticket/${createdTicket.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 font-medium text-sm bg-blue-50 px-3 py-1 rounded-full"
+                    className="text-[var(--verified)] font-mono text-xs border border-[var(--verified)] px-3 py-1 hover:bg-[var(--verified)]/10"
                   >
                     Open Ticket ↗
                   </a>
@@ -1579,25 +1586,25 @@ export default function AdminPage() {
 
             <div className="block-card p-5">
               <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-blue-600" /> Stats{" "}
+                <Users className="w-5 h-5 mr-2 text-[var(--verified)]" /> Stats{" "}
                 {selectedEvent ? `• ${selectedEvent.name}` : ""}
               </h2>
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-[var(--foreground)]/5 p-4 rounded-xl border border-white/10">
+                <div className="bg-[var(--surface-2)] p-4 border border-[var(--border)]">
                   <p className="text-sm text-[var(--foreground)] opacity-70">
                     Issued
                   </p>
                   <p className="text-3xl font-black">{stats?.issued ?? 0}</p>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                  <p className="text-sm text-blue-700">Entries</p>
-                  <p className="text-3xl font-black text-blue-900">
+                <div className="bg-[var(--surface-2)] p-4 border border-[var(--border)]">
+                  <p className="text-sm text-[var(--verified)] font-mono uppercase tracking-wider">Entries</p>
+                  <p className="text-3xl font-black text-[var(--verified)]">
                     {stats?.entries ?? 0}
                   </p>
                 </div>
-                <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                  <p className="text-sm text-orange-700">Exits</p>
-                  <p className="text-3xl font-black text-orange-900">
+                <div className="bg-[var(--surface-2)] p-4 border border-[var(--border)]">
+                  <p className="text-sm text-[var(--alert)] font-mono uppercase tracking-wider">Exits</p>
+                  <p className="text-3xl font-black text-[var(--alert)]">
                     {stats?.exits ?? 0}
                   </p>
                 </div>
@@ -1622,7 +1629,7 @@ export default function AdminPage() {
                   return (
                     <div key={item.hour} className="flex flex-col items-center">
                       <div
-                        className={`w-full bg-indigo-100 rounded ${levelClass}`}
+                        className={`w-full bg-[var(--verified)]/80 ${levelClass}`}
                       />
                       <span className="text-[10px] text-[var(--foreground)] opacity-70 mt-1">
                         {item.hour}
@@ -1641,7 +1648,7 @@ export default function AdminPage() {
                 {eventTickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="border rounded-lg p-3 flex justify-between items-center"
+                    className="border border-[var(--border)] p-3 flex justify-between items-center bg-[var(--surface-2)]"
                   >
                     <div>
                       <p className="font-semibold text-[var(--foreground)] opacity-70">
@@ -1655,14 +1662,14 @@ export default function AdminPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => revokeTicket(ticket.id)}
-                        className="px-2 py-1 text-xs rounded bg-red-50 text-red-700 border border-red-200 flex items-center"
+                        className="px-2 py-1 text-xs rounded-none bg-[var(--alert)]/10 text-[var(--alert)] border border-[var(--alert)]/20 flex items-center hover:bg-[var(--alert)]/20"
                       >
                         <ShieldBan className="w-3 h-3 mr-1" />
                         Revoke
                       </button>
                       <button
                         onClick={() => reissueTicket(ticket)}
-                        className="px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center"
+                        className="px-2 py-1 text-xs rounded-none bg-[var(--verified)]/10 text-[var(--verified)] border border-[var(--verified)]/20 flex items-center hover:bg-[var(--verified)]/20"
                       >
                         <ShieldCheck className="w-3 h-3 mr-1" />
                         Reissue
@@ -1680,7 +1687,7 @@ export default function AdminPage() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-3">
                 <select
                   title="Payment ticket"
-                  className="field md:col-span-2"
+                  className="select md:col-span-2"
                   value={paymentForm.ticket_id}
                   onChange={(event) =>
                     setPaymentForm({
@@ -1710,7 +1717,7 @@ export default function AdminPage() {
                 />
                 <select
                   title="Payment method"
-                  className="field"
+                  className="select"
                   value={paymentForm.method}
                   onChange={(event) =>
                     setPaymentForm({
@@ -1758,7 +1765,7 @@ export default function AdminPage() {
                 {payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="border rounded-lg p-3 text-sm"
+                    className="border border-[var(--border)] p-3 text-sm bg-[var(--surface-2)]"
                   >
                     <div className="flex items-center justify-between">
                       <p className="font-semibold">
@@ -1772,19 +1779,19 @@ export default function AdminPage() {
                     </p>
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn-secondary px-2 py-1 text-xs"
+                        className="btn-secondary px-2 py-1 text-xs font-mono"
                         onClick={() => openCheckout(payment.id)}
                       >
                         Checkout
                       </button>
                       <button
-                        className="btn-secondary px-2 py-1 text-xs"
+                        className="btn-secondary px-2 py-1 text-xs font-mono"
                         onClick={() => updatePaymentStatus(payment.id, "paid")}
                       >
                         Mark Paid
                       </button>
                       <button
-                        className="btn-secondary px-2 py-1 text-xs"
+                        className="btn-secondary px-2 py-1 text-xs font-mono"
                         onClick={() =>
                           updatePaymentStatus(payment.id, "failed")
                         }
@@ -1792,7 +1799,7 @@ export default function AdminPage() {
                         Mark Failed
                       </button>
                       <button
-                        className="btn-secondary px-2 py-1 text-xs"
+                        className="btn-secondary px-2 py-1 text-xs font-mono"
                         onClick={() =>
                           updatePaymentStatus(payment.id, "refunded")
                         }
@@ -1811,7 +1818,7 @@ export default function AdminPage() {
                 {scanLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="border rounded-lg p-3 text-sm flex justify-between"
+                    className="border border-[var(--border)] p-3 text-sm flex justify-between bg-[var(--surface-2)]"
                   >
                     <span className="font-medium">
                       {log.scan_type.toUpperCase()}

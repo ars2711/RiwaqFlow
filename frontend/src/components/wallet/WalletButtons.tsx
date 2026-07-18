@@ -349,7 +349,7 @@ function DemoPassModal({
 
           {/* Footer notice */}
           <div className="px-5 py-4 flex items-start gap-2.5 bg-[var(--surface)]">
-            <Info className="w-4 h-4 text-[var(--primary)] flex-shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 text-[var(--verified)] flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-bold text-[var(--fg)] mb-0.5">{brandLabel} Preview</p>
               <p className="text-[11px] leading-relaxed opacity-60">{brandNote}</p>

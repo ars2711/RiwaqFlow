@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus pulse · Riwaq</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@600&display=swap');
+
+html[data-theme="dark"]{
+  --bg:#0D1117; --surface:#161B22; --surface-2:#1D2430;
+  --text:#ECE3D0; --muted:#9CA3AF; --border:rgba(236,227,208,.14);
+  --verified:#3FA37D; --alert:#D9684E; --brass:#C9A04B;
+}
+html[data-theme="light"]{
+  --bg:#F3ECDC; --surface:#EAE0C9; --surface-2:#E2D6BB;
+  --text:#1C3344; --muted:#5C5648; --border:rgba(28,51,68,.18);
+  --verified:#146353; --alert:#8C3A2E; --brass:#A9823C;
+}
+:root{
+  --cta-text:#F7F2E4;
+  --f-display:'Fraunces',serif; --f-body:'Archivo',sans-serif;
+  --f-mono:'IBM Plex Mono',monospace; --f-urdu:'Noto Nastaliq Urdu',serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--f-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 60px;}
+a{color:inherit;}
+
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:1000;background:var(--bg);border-bottom:1px solid var(--border);}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1080px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-text{font-family:var(--f-display);font-weight:600;font-size:17px;}
+.nav-links{display:flex;gap:22px;align-items:center;}
+.nav-links a{font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-decoration:none;}
+.nav-links a.active{color:var(--verified);}
+.nav-links a:hover{color:var(--text);}
+.theme-toggle{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:7px 12px;cursor:pointer;font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text);min-height:36px;}
+.theme-toggle:hover{border-color:var(--verified);}
+.theme-toggle:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.theme-toggle:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+@media (max-width:760px){.nav-links a{display:none;}}
+
+.tag-live{position:relative;display:inline-flex;align-items:center;padding:3px 10px;margin-bottom:8px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--verified);}
+.tag-live::before,.tag-live::after{content:'';position:absolute;top:0;bottom:0;width:5px;border-color:var(--verified);}
+.tag-live::before{left:0;border-left:1.5px solid;border-top:1.5px solid;border-bottom:1.5px solid;}
+.tag-live::after{right:0;border-right:1.5px solid;border-top:1.5px solid;border-bottom:1.5px solid;}
+
+/* ---------- Header ---------- */
+.page-head{padding:28px 0 6px;}
+.eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.page-head h1{font-family:var(--f-display);font-weight:500;font-size:30px;margin:0;}
+.page-head p{font-size:13.5px;color:var(--muted);margin:10px 0 22px;line-height:1.7;max-width:560px;}
+
+.stats-row{display:flex;gap:32px;flex-wrap:wrap;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:24px;}
+.stat .num{font-family:var(--f-display);font-size:23px;font-weight:600;}
+.stat .label{font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* ---------- Layout ---------- */
+.pulse-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;}
+@media (max-width:880px){.pulse-grid{grid-template-columns:1fr;}}
+
+.map-card{background:var(--surface);border:1px solid var(--border);padding:16px;}
+.map-card h2{font-family:var(--f-display);font-weight:500;font-size:15px;margin:0 0 2px;}
+.map-card p.sub{font-size:11.5px;color:var(--muted);margin:0 0 12px;}
+
+#leaflet-map{height:440px;width:100%;border:1px solid var(--border);background:var(--surface-2);}
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
+.leaflet-control-zoom a:hover{background:var(--surface-2)!important;}
+.leaflet-control-attribution{background:rgba(13,17,23,.7)!important;color:var(--muted)!important;font-size:9px!important;}
+.leaflet-control-attribution a{color:var(--muted)!important;}
+.leaflet-tooltip{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;font-family:var(--f-mono)!important;font-size:11px!important;border-radius:0!important;box-shadow:none!important;}
+.leaflet-tooltip-top:before{border-top-color:var(--border)!important;}
+
+.riwaq-pin{}
+.pin-body{
+  width:100%;height:100%;border-radius:50%;border:2px solid var(--brass);display:flex;align-items:center;
+  justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.4);color:var(--cta-text);
+}
+.pin-body.alert-ring{border:2.5px solid var(--alert);}
+.pin-body svg{width:58%;height:58%;}
+.user-pin{width:100%;height:100%;border-radius:50%;background:var(--verified);border:2px solid var(--cta-text);box-shadow:0 0 0 4px rgba(63,163,125,.25);}
+
+.controls-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+.ctrl-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;padding:9px 14px;cursor:pointer;min-height:38px;}
+.ctrl-btn:hover{border-color:var(--verified);}
+.ctrl-btn:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+.nearest-info{font-size:12px;color:var(--muted);}
+.nearest-info strong{color:var(--text);}
+
+.legend{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;}
+.legend-row .lbl{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);width:100%;margin-bottom:2px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.legend-icon{width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);flex-shrink:0;}
+.legend-icon svg{width:60%;height:60%;}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+/* ---------- Detail panel ---------- */
+.detail-panel{background:var(--surface);border:1px solid var(--border);padding:18px;min-height:300px;}
+.detail-panel h2{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;}
+.detail-empty{font-size:13px;color:var(--muted);line-height:1.7;}
+.detail-name{font-family:var(--f-display);font-size:19px;font-weight:500;margin-bottom:2px;}
+.detail-full{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.status-badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.03em;padding:6px 11px;border:1.5px solid currentColor;margin-bottom:14px;}
+.status-badge.verified{color:var(--verified);}
+.status-badge.alert{color:var(--alert);}
+.status-badge.caution{color:var(--brass);}
+.status-badge.neutral{color:var(--muted);}
+.occ-bar-track{height:7px;background:var(--surface-2);margin:10px 0 6px;overflow:hidden;}
+.occ-bar-fill{height:100%;}
+.occ-label{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;}
+.detail-address{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.7;border-top:1px solid var(--border);padding-top:14px;}
+.confidence{font-size:11px;color:var(--muted);margin-top:8px;font-style:italic;}
+
+footer{padding:36px 0 0;text-align:center;}
+footer .urdu{font-family:var(--f-urdu);font-size:17px;color:var(--text);margin-bottom:6px;}
+footer p{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="riwaq-landing-page-v3.html" style="text-decoration:none;">
+      <svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M4 34 L4 18 A6 6 0 0 1 16 18 L16 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/>
+        <path d="M14 34 L14 18 A6 6 0 0 1 26 18 L26 34 Z" fill="currentColor" style="color:var(--text)"/>
+        <path d="M24 34 L24 18 A6 6 0 0 1 36 18 L36 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/>
+        <circle cx="20" cy="14" r="2" fill="#146353" style="fill:var(--verified)"/>
+      </svg>
+      <span class="brand-text">Riwaq</span>
+    </a>
+    <div class="nav-links">
+      <a href="riwaq-campus-pulse-v3.html" class="active">Campus pulse</a>
+      <a href="riwaq-events-calendar-v3.html">Events</a>
+      <a href="riwaq-societies-directory-v3.html">Societies</a>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" aria-pressed="false">
+      <span id="theme-toggle-label">Dark mode</span>
+    </button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="page-head">
+    <span class="tag-live">Live &middot; NUST H-12</span>
+    <h1>Campus pulse</h1>
+    <p>Shape tells you what a place is — an arch for a mosque, a flask for NSTP. Colour tells you only one thing: how full it is right now. The two are never mixed.</p>
+    <div class="stats-row" id="stats-row"></div>
+  </div>
+
+  <div class="pulse-grid">
+    <div class="map-card">
+      <h2>Live venue map</h2>
+      <p class="sub">Real OpenStreetMap geography, tile theme synced to the toggle above.</p>
+      <div id="leaflet-map"></div>
+      <div class="controls-row">
+        <button class="ctrl-btn" id="locate-btn">Use my location</button>
+        <button class="ctrl-btn" id="simulate-btn">Simulate on-campus location</button>
+        <span class="nearest-info" id="nearest-info"></span>
+      </div>
+      <div class="legend">
+        <div class="legend-row">
+          <span class="lbl">Venue type — shape</span>
+          <span class="legend-item"><span class="legend-icon" id="li-academic"></span>Academic</span>
+          <span class="legend-item"><span class="legend-icon" id="li-science_park"></span>Science park</span>
+          <span class="legend-item"><span class="legend-icon" id="li-auditorium"></span>Auditorium</span>
+          <span class="legend-item"><span class="legend-icon" id="li-library"></span>Library</span>
+          <span class="legend-item"><span class="legend-icon" id="li-sports"></span>Sports</span>
+          <span class="legend-item"><span class="legend-icon" id="li-religious"></span>Mosque</span>
+          <span class="legend-item"><span class="legend-icon" id="li-dining"></span>Dining</span>
+          <span class="legend-item"><span class="legend-icon" id="li-residential"></span>Hostel</span>
+          <span class="legend-item"><span class="legend-icon" id="li-landmark"></span>Landmark</span>
+        </div>
+        <div class="legend-row">
+          <span class="lbl">Occupancy — colour</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--verified)"></span>Low</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--brass)"></span>Moderate</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--alert)"></span>High</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--muted)"></span>No data</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-panel">
+      <h2>Venue details</h2>
+      <p class="detail-empty">Tap a marker to see its occupancy and type — or use the location buttons to find what's nearest you.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="urdu">رواق</div>
+  <p>RIWAQ &middot; NUST H-12 &middot; CAMPUS PULSE</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ---------------- Theme + tiles ---------------- */
+const toggle=document.getElementById('theme-toggle');
+const toggleLabel=document.getElementById('theme-toggle-label');
+let theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+
+/* ---------------- Icon glyphs (shape = type, never colour) ---------------- */
+const ICONS = {
+  academic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c0 1.3 2.7 2.5 6 2.5s6-1.2 6-2.5v-5"/></svg>',
+  science_park: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L15 8V2"/><path d="M9 2h6"/></svg>',
+  auditorium: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1"/><path d="M9 19h6M12 15v4"/></svg>',
+  library: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c4 0 7 1 10 3 3-2 6-3 10-3v14c-4 0-7 1-10 3-3-2-6-3-10-3V5z"/></svg>',
+  sports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6 8.5c3 2 9 2 12 0M6 15.5c3-2 9-2 12 0"/></svg>',
+  religious: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V12a6 6 0 0 1 12 0v9"/></svg>',
+  dining: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6V8z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/></svg>',
+  residential: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></svg>',
+  landmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 5.9 6.4.6-4.9 4.3 1.5 6.3L12 16l-5.6 3.1 1.5-6.3-4.9-4.3 6.4-.6L12 2z"/></svg>'
+};
+Object.keys(ICONS).forEach(cat=>{
+  const el=document.getElementById('li-'+cat);
+  if(el) el.innerHTML = ICONS[cat];
+});
+
+const categoryLabels = {
+  academic:"Academic building", science_park:"Science & tech park", auditorium:"Auditorium",
+  library:"Library", sports:"Sports", religious:"Mosque", dining:"Dining",
+  residential:"Hostel", landmark:"Landmark"
+};
+
+/* ---------------- Venues (real GPS, NUST H-12) ---------------- */
+const venues = [
+  {id:"seecs",name:"SEECS",full_name:"School of Electrical Engineering and Computer Science",category:"academic",school_code:"SEECS",latitude:33.642975,longitude:72.990737,address:"Indus Loop, H-12, Islamabad",capacity:600,capacity_confirmed:0,current_occupancy:0},
+  {id:"nbs",name:"NBS",full_name:"NUST Business School",category:"academic",school_code:"NBS",latitude:33.6441026,longitude:72.9913595,address:"NBS Building, Scholars Ave, H-12, Islamabad",capacity:400,capacity_confirmed:0,current_occupancy:0},
+  {id:"s3h",name:"S3H",full_name:"School of Social Sciences and Humanities",category:"academic",school_code:"S3H",latitude:33.6443811,longitude:72.9925797,address:"Indus Loop, H-12, Islamabad",capacity:400,capacity_confirmed:1,current_occupancy:326},
+  {id:"smme",name:"SMME",full_name:"School of Mechanical and Manufacturing Engineering",category:"academic",school_code:"SMME",latitude:33.6364109,longitude:72.9894515,address:"Bolan Rd, H-12, Islamabad",capacity:450,capacity_confirmed:0,current_occupancy:0},
+  {id:"asab",name:"ASAB",full_name:"Atta-ur-Rahman School of Applied Biosciences",category:"academic",school_code:"ASAB",latitude:33.6463681,longitude:72.9878436,address:"H-12, Islamabad",capacity:350,capacity_confirmed:0,current_occupancy:0},
+  {id:"sada",name:"SADA",full_name:"School of Art, Design and Architecture",category:"academic",school_code:"SADA",latitude:33.6459855,longitude:72.9887743,address:"H-12, NUST, Islamabad",capacity:300,capacity_confirmed:0,current_occupancy:0},
+  {id:"nice",name:"NICE",full_name:"NUST Institute of Civil Engineering",category:"academic",school_code:"NICE",latitude:33.6406825,longitude:72.9851872,address:"H-12, Islamabad (near Gate 4)",capacity:350,capacity_confirmed:0,current_occupancy:0},
+  {id:"nstp",name:"NSTP",full_name:"National Science & Technology Park",category:"science_park",school_code:null,latitude:33.6456729,longitude:72.9985536,address:"Ravi Rd, H-12, Islamabad",capacity:1200,capacity_confirmed:1,current_occupancy:1000},
+  {id:"jinnah-auditorium",name:"Jinnah Auditorium",full_name:"Jinnah Auditorium",category:"auditorium",school_code:null,latitude:33.6432696,longitude:72.9934269,address:"Indus Loop, H-12, Islamabad",capacity:1500,capacity_confirmed:0,current_occupancy:0},
+  {id:"central-library",name:"Central Library",full_name:"NUST Central Library, H-12 Main Campus",category:"library",school_code:null,latitude:33.6420856,longitude:72.992481,address:"H-12, Islamabad",capacity:570,capacity_confirmed:1,current_occupancy:140},
+  {id:"sports-complex",name:"Sports Complex",full_name:"NUST Sports Complex",category:"sports",school_code:null,latitude:33.6411359,longitude:72.9944962,address:"Chenab Rd, H-12, Islamabad",capacity:500,capacity_confirmed:0,current_occupancy:0},
+  {id:"masjid-e-taqwa",name:"Masjid-e-Taqwa",full_name:"Masjid-e-Taqwa",category:"religious",school_code:null,latitude:33.642447,longitude:72.999099,address:"H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"masjid-e-noor",name:"Masjid-e-Noor",full_name:"Masjid-e-Noor",category:"religious",school_code:null,latitude:33.6355842,longitude:72.9916931,address:"Bolan Rd, H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"concordia-1",name:"Concordia 1 (C1)",full_name:"Concordia 1 Cafeteria",category:"dining",school_code:null,latitude:33.6464725,longitude:72.9902076,address:"H-12, Islamabad",capacity:250,capacity_confirmed:0,current_occupancy:0},
+  {id:"s3h-cafe",name:"S3H Cafe",full_name:"S3H Cafe",category:"dining",school_code:"S3H",latitude:33.6444853,longitude:72.9932395,address:"Indus Loop, H-12, Islamabad",capacity:100,capacity_confirmed:0,current_occupancy:0},
+  {id:"zainab-hostel",name:"Zainab Hostel",full_name:"Zainab Hostel (female residential)",category:"residential",school_code:null,latitude:33.6457013,longitude:72.9938745,address:"H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"johar-hostel",name:"Johar Hostel",full_name:"Johar Hostel (male residential)",category:"residential",school_code:null,latitude:33.6455132,longitude:72.992356,address:"H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"ghazali-hostel",name:"Ghazali Hostel",full_name:"Ghazali Hostel (male residential)",category:"residential",school_code:null,latitude:33.6402009,longitude:72.9877339,address:"H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"fatima-hostel",name:"Fatima Hostels",full_name:"Fatima Hostels (female residential)",category:"residential",school_code:null,latitude:33.6432998,longitude:72.9856093,address:"Block 1, H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"khadija-hostel",name:"Khadija Hostels",full_name:"Khadija Hostels (female residential)",category:"residential",school_code:null,latitude:33.6445183,longitude:72.9948394,address:"Indus Loop, H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0},
+  {id:"athletics-ground",name:"Athletics Ground",full_name:"NUST Athletics Ground",category:"sports",school_code:null,latitude:33.6413996,longitude:72.9958305,address:"H-12, Islamabad",capacity:800,capacity_confirmed:0,current_occupancy:0},
+  {id:"football-ground",name:"HBL Football Ground",full_name:"NUST HBL Football Ground",category:"sports",school_code:null,latitude:33.645092,longitude:72.9837411,address:"H-12, Islamabad",capacity:600,capacity_confirmed:0,current_occupancy:0},
+  {id:"kolachi-eats",name:"Kolachi Eats",full_name:"Kolachi Eats (food street, opposite NUST Gate)",category:"dining",school_code:null,latitude:33.6408585,longitude:72.9825847,address:"4 Service Rd, opposite NUST Gate, H-12, Islamabad",capacity:150,capacity_confirmed:0,current_occupancy:0},
+  {id:"main-office",name:"Main Office",full_name:"NUST Main Office (Rector's Office)",category:"landmark",school_code:null,latitude:33.6425881,longitude:72.9931443,address:"Indus Loop, H-12, Islamabad",capacity:null,capacity_confirmed:0,current_occupancy:0}
+];
+
+/* ---------------- Helpers ---------------- */
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
+function occupancyPct(v){
+  if(!v.capacity) return null;
+  if(v.capacity_confirmed) return Math.round((v.current_occupancy/v.capacity)*100);
+  return 15 + (hashStr(v.id)%71);
+}
+function occColor(pct){
+  if(pct===null) return 'var(--muted)';
+  if(pct<50) return 'var(--verified)';
+  if(pct<80) return 'var(--brass)';
+  return 'var(--alert)';
+}
+function occWord(pct){
+  if(pct===null) return ['neutral','No occupancy data'];
+  if(pct<50) return ['verified','Low occupancy'];
+  if(pct<80) return ['caution','Moderate occupancy'];
+  return ['alert','High occupancy'];
+}
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function fmtDistance(m){ return m<1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(1)} km`; }
+
+/* ---------------- Map ---------------- */
+const map = L.map('leaflet-map', { scrollWheelZoom:true });
+const tileDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:20});
+const tileLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:20});
+let activeTile = theme==='light' ? tileLight : tileDark;
+activeTile.addTo(map);
+
+const bounds = L.latLngBounds(venues.map(v=>[v.latitude,v.longitude]));
+map.fitBounds(bounds, {padding:[26,26]});
+
+const markerRefs={};
+let selectedId=null;
+let userMarker=null;
+
+function buildIcon(v, pct){
+  const size = 26 + Math.sqrt(v.capacity||50)/5;
+  const alertClass = pct!==null && pct>=80 ? ' alert-ring' : '';
+  return L.divIcon({
+    className:'riwaq-pin',
+    html:`<div class="pin-body${alertClass}" style="background:${occColor(pct)}">${ICONS[v.category]}</div>`,
+    iconSize:[size,size],
+    iconAnchor:[size/2,size/2]
+  });
+}
+
+function renderMarkers(){
+  venues.forEach(v=>{
+    const pct=occupancyPct(v);
+    const m=L.marker([v.latitude,v.longitude], {icon:buildIcon(v,pct)}).addTo(map);
+    m.bindTooltip(`${v.name}${pct!==null?' — '+pct+'% full':''}`, {direction:'top', offset:[0,-6]});
+    m.on('click', ()=>selectVenue(v.id));
+    markerRefs[v.id]=m;
+  });
+}
+
+function selectVenue(id){
+  selectedId=id;
+  const v=venues.find(x=>x.id===id);
+  const pct=occupancyPct(v);
+  const [cls,label]=occWord(pct);
+  let occHtml;
+  if(pct!==null){
+    occHtml=`
+      <div class="occ-bar-track"><div class="occ-bar-fill" style="width:${pct}%;background:${occColor(pct)}"></div></div>
+      <div class="occ-label"><span>${pct}% full</span><span>${v.capacity_confirmed?v.current_occupancy:Math.round(v.capacity*pct/100)} / ${v.capacity}</span></div>
+      <div class="confidence">${v.capacity_confirmed?'Live data':'Estimated — replace with real check-in data'}</div>
+    `;
+  } else {
+    occHtml=`<div class="confidence">No occupancy tracking for this venue yet.</div>`;
+  }
+  document.getElementById('detail-panel').innerHTML=`
+    <h2>Venue details</h2>
+    <div class="detail-name">${v.name}</div>
+    <div class="detail-full">${v.full_name}</div>
+    <span class="status-badge ${cls}">${ICONS[v.category]}${label}</span>
+    ${occHtml}
+    <div class="detail-address">${v.address}</div>
+  `;
+  map.panTo([v.latitude,v.longitude]);
+}
+
+function renderStats(){
+  const live=venues.filter(v=>occupancyPct(v)!==null);
+  const high=live.filter(v=>occupancyPct(v)>=80).length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat"><div class="num">${venues.length}</div><div class="label">Venues mapped</div></div>
+    <div class="stat"><div class="num">${live.length}</div><div class="label">Reporting occupancy</div></div>
+    <div class="stat"><div class="num">${high}</div><div class="label">At high occupancy</div></div>
+    <div class="stat"><div class="num">${Object.keys(categoryLabels).length}</div><div class="label">Venue types</div></div>
+  `;
+}
+
+renderMarkers();
+renderStats();
+
+setInterval(()=>{
+  venues.forEach(v=>{
+    if(v.capacity && v.capacity_confirmed){
+      const delta=Math.round((Math.random()-0.5)*0.04*v.capacity);
+      v.current_occupancy=Math.max(0, Math.min(v.capacity, v.current_occupancy+delta));
+    }
+  });
+  venues.forEach(v=>{
+    const pct=occupancyPct(v);
+    markerRefs[v.id].setIcon(buildIcon(v,pct));
+  });
+  renderStats();
+  if(selectedId) selectVenue(selectedId);
+}, 5000);
+
+/* ---------------- Location ---------------- */
+function showUserLocation(lat,lng,label){
+  if(userMarker) map.removeLayer(userMarker);
+  userMarker=L.marker([lat,lng], {
+    icon: L.divIcon({className:'riwaq-pin', html:'<div class="user-pin"></div>', iconSize:[22,22], iconAnchor:[11,11]})
+  }).addTo(map);
+  userMarker.bindTooltip(label, {direction:'top', offset:[0,-6]});
+
+  let nearest=null, nd=Infinity;
+  venues.forEach(v=>{
+    const d=haversine(lat,lng,v.latitude,v.longitude);
+    if(d<nd){ nd=d; nearest=v; }
+  });
+  document.getElementById('nearest-info').innerHTML=`Nearest venue: <strong>${nearest.name}</strong> — ${fmtDistance(nd)} away`;
+  map.flyTo([lat,lng], Math.max(map.getZoom(),16));
+}
+document.getElementById('locate-btn').addEventListener('click', ()=>{
+  const info=document.getElementById('nearest-info');
+  if(!navigator.geolocation){ info.textContent="Geolocation isn't available in this browser."; return; }
+  info.textContent="Locating…";
+  navigator.geolocation.getCurrentPosition(
+    pos=>showUserLocation(pos.coords.latitude, pos.coords.longitude, "You are here"),
+    err=>{ info.textContent=`Couldn't get your location (${err.message}). Try simulate instead.`; }
+  );
+});
+document.getElementById('simulate-btn').addEventListener('click', ()=>{
+  showUserLocation(33.6442, 72.9920, "Simulated location (demo)");
+});
+
+/* ---------------- Theme toggle (incl. tile swap) ---------------- */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+  toggle.setAttribute('aria-pressed', String(theme==='light'));
+  toggleLabel.textContent = theme==='light' ? 'Light mode' : 'Dark mode';
+  map.removeLayer(activeTile);
+  activeTile = theme==='light' ? tileLight : tileDark;
+  activeTile.addTo(map);
+}
+toggle.addEventListener('click', ()=>{ theme = theme==='dark'?'light':'dark'; applyTheme(); });
+applyTheme();
+</script>
+</body>
+</html>

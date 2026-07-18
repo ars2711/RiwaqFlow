@@ -13,20 +13,20 @@ export default function AboutTicketPage() {
   return (
     <div className="app-shell p-6">
       <div className="max-w-3xl mx-auto space-y-5">
-        <div className="glass-panel p-6 rounded-2xl">
+        <div className="block-card p-6 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
           <BackButton href="/" label="Back" />
           <div className="mt-4 flex items-center gap-3">
-            <div className="rounded-2xl p-3 bg-[var(--primary-soft)] border border-[var(--border)]">
-              <ShieldCheck className="w-8 h-8 text-[var(--primary)]" />
+            <div className="p-3 bg-[var(--surface-2)] border border-[var(--border)]">
+              <ShieldCheck className="w-8 h-8 text-[var(--verified)]" />
             </div>
             <div>
-              <h1 className="text-2xl font-black">About This Ticket</h1>
-              <p className="section-subtitle text-sm mt-0.5">
-                Riwaq secure digital access pass
+              <h1 className="text-2xl font-display font-medium">About This Ticket</h1>
+              <p className="text-xs text-[var(--muted)] font-mono uppercase tracking-wider mt-0.5">
+                Riwaq Secure Digital Access Pass
               </p>
             </div>
           </div>
-          <p className="section-subtitle mt-3">
+          <p className="section-subtitle mt-4">
             Every Riwaq ticket is a verified digital pass checked against
             server-side rules at the gate. Your QR code is dynamic — it
             refreshes every 30 seconds so screenshots cannot be reused.
@@ -35,11 +35,11 @@ export default function AboutTicketPage() {
 
         {/* Feature breakdown */}
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <QrCode className="w-6 h-6 text-[var(--primary)] shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <QrCode className="w-6 h-6 text-[var(--verified)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Rotating QR token</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Rotating QR token</h2>
+              <p className="section-subtitle text-xs mt-1">
                 Your QR code changes every 30 seconds. The token is signed
                 server-side with HMAC-SHA256 and carries an expiry claim inside
                 a short-lived JWT. Taking a screenshot will produce an expired,
@@ -48,11 +48,11 @@ export default function AboutTicketPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <Lock className="w-6 h-6 text-violet-400 shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <Lock className="w-6 h-6 text-[var(--brass)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Device-locked pass</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Device-locked pass</h2>
+              <p className="section-subtitle text-xs mt-1">
                 On first open, a browser fingerprint is recorded server-side.
                 Subsequent opens on a different device will be flagged. This
                 prevents ticket sharing after purchase.
@@ -60,11 +60,11 @@ export default function AboutTicketPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <BadgeCheck className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <BadgeCheck className="w-6 h-6 text-[var(--verified)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Entry / exit enforcement</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Entry / exit enforcement</h2>
+              <p className="section-subtitle text-xs mt-1">
                 Tickets track entry and exit counts server-side. Standard
                 tickets allow up to 2 entries + 2 exits (re-entry policy). OC
                 (organiser) tickets are exempt from entry limits. Revoked
@@ -73,11 +73,11 @@ export default function AboutTicketPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <RefreshCw className="w-6 h-6 text-cyan-400 shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <RefreshCw className="w-6 h-6 text-[var(--verified)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Offline support</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Offline support</h2>
+              <p className="section-subtitle text-xs mt-1">
                 Your ticket is cached in the browser&apos;s local storage on
                 first load. If you go offline before the event, you can still
                 display your cached ticket. The gate scanner also has an offline
@@ -86,11 +86,11 @@ export default function AboutTicketPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <Wallet className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <Wallet className="w-6 h-6 text-[var(--brass)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Wallet passes</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Wallet passes</h2>
+              <p className="section-subtitle text-xs mt-1">
                 The ticket page includes Apple Wallet, Google Wallet, and
                 Samsung Wallet action buttons. Production issuer signing (for
                 real .pkpass / Google JWT) requires a paid provider credential
@@ -99,11 +99,11 @@ export default function AboutTicketPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex gap-3">
-            <Smartphone className="w-6 h-6 text-rose-400 shrink-0 mt-0.5" />
+          <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex gap-3">
+            <Smartphone className="w-6 h-6 text-[var(--alert)] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold">Screen-awake mode</h2>
-              <p className="section-subtitle text-sm mt-1">
+              <h2 className="font-display font-medium text-base">Screen-awake mode</h2>
+              <p className="section-subtitle text-xs mt-1">
                 The ticket page can request a Wake Lock to prevent your screen
                 from dimming while showing the QR at the gate. Tap the battery
                 icon on your ticket page to enable it.
@@ -113,16 +113,16 @@ export default function AboutTicketPage() {
         </div>
 
         {/* Organiser & verification */}
-        <div className="glass-panel p-5 rounded-2xl grid md:grid-cols-2 gap-4 text-sm">
+        <div className="block-card p-5 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] grid md:grid-cols-2 gap-4 text-xs">
           <div>
-            <h2 className="font-semibold mb-1">Organiser</h2>
+            <h2 className="font-display font-medium text-sm mb-1 text-[var(--text)]">Organiser</h2>
             <p className="section-subtitle">Riwaq — NUST Events Platform</p>
             <p className="section-subtitle mt-0.5">
               Contact: support@Riwaq.pk
             </p>
           </div>
           <div>
-            <h2 className="font-semibold mb-1">Verification</h2>
+            <h2 className="font-display font-medium text-sm mb-1 text-[var(--text)]">Verification</h2>
             <p className="section-subtitle">
               Dynamic QR updates every 30 seconds. Screenshots are expected to
               expire quickly. Gate validity is always confirmed server-side over
@@ -131,7 +131,7 @@ export default function AboutTicketPage() {
           </div>
         </div>
 
-        <p className="text-xs section-subtitle text-center">
+        <p className="text-[10px] font-mono text-center text-[var(--muted)] uppercase tracking-wider">
           For support, contact the event organiser listed on your ticket. Ticket
           validity is always confirmed at gate scan regardless of on-screen
           status.

@@ -13,7 +13,6 @@ import {
 import { API_BASE } from "@/lib/api";
 import { EventItem, ScanResponse } from "@/lib/types";
 import BackButton from "@/app/back-button";
-import { motion } from "framer-motion";
 
 type QueuedScan = {
   id: string;
@@ -83,41 +82,6 @@ export default function ScanPage() {
   const [authDisabled, setAuthDisabled] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResponse | null>(null);
   const [scanning, setScanning] = useState(false);
-
-  // Open Database Helper
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const saveScanOffline = async (scanData: unknown) => {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open("Riwaq-offline-scans", 1);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains("scans")) {
-          db.createObjectStore("scans", { keyPath: "id", autoIncrement: true });
-        }
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      request.onsuccess = (event: any) => {
-        const db = event.target.result;
-        const tx = db.transaction("scans", "readwrite");
-        const store = tx.objectStore("scans");
-        store.add(scanData);
-        tx.oncomplete = () => {
-          // Trigger service worker background sync
-          if ("serviceWorker" in navigator && "SyncManager" in window) {
-            navigator.serviceWorker.ready
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .then((swRegistration: any) => {
-                return swRegistration.sync.register("sync-scans");
-              })
-              .catch(() => {});
-          }
-          resolve(true);
-        };
-      };
-      request.onerror = () => reject(request.error);
-    });
-  };
   const [scanType, setScanType] = useState<"entry" | "exit">("entry");
   const [queuedCount, setQueuedCount] = useState(0);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -221,19 +185,17 @@ export default function ScanPage() {
 
       scannerRef.current.render(
         async (decodedText) => {
-          // Pause scanning
           if (scannerRef.current) {
             scannerRef.current.pause(true);
           }
 
           try {
-            // Extract token from URL if it's a URL, otherwise assume it's the token
             let token = decodedText;
             try {
               const url = new URL(decodedText);
               token = url.searchParams.get("t") || decodedText;
             } catch {
-              // Not a URL, use as is
+              // Not a URL
             }
 
             const verifyRes = await fetch(`${API_BASE}/api/verify`, {
@@ -310,7 +272,7 @@ export default function ScanPage() {
           }
         },
         () => {
-          // Ignore scan errors (happens when no QR is in frame)
+          // Ignore scan errors
         },
       );
     }
@@ -347,78 +309,83 @@ export default function ScanPage() {
     setScannerToken(payload.access_token);
   };
 
+  const handleNextScan = () => {
+    setScanResult(null);
+    if (scannerRef.current) {
+      scannerRef.current.resume();
+    }
+  };
+
   if (!scannerToken) {
     return (
-      <div className="app-shell flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="pulse-orb h-44 w-44 left-[-1.5rem] top-[9rem] bg-blue-500/70" />
-        <div className="w-full max-w-sm glass-panel p-8 space-y-4 rounded-3xl relative overflow-hidden border border-[var(--primary)]/20 shadow-[0_0_50px_rgba(59,130,246,0.15)] mt-10">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.15),transparent_50%)] pointer-events-none" />
-
+      <div className="app-shell flex items-center justify-center p-4 min-h-screen">
+        <div className="w-full max-w-sm block-card p-8 space-y-6 relative border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
           <BackButton href="/" label="Back" />
 
           <div className="flex flex-col items-center justify-center pt-2 pb-4 text-center">
-            <motion.div className="mb-4 relative flex items-center justify-center w-20 h-20 rounded-full bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/30">
-              <motion.div
-                className="absolute inset-1 rounded-full border border-[var(--primary)]/30"
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                style={{ borderTopColor: "var(--primary)" }}
-              />
-              <ScanLine className="w-8 h-8 text-[var(--primary)]" />
-            </motion.div>
-            <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-cyan-400">
+            <div className="mb-4 relative flex items-center justify-center w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)]">
+              <ScanLine className="w-8 h-8 text-[var(--brass)]" />
+            </div>
+            <h1 className="text-2xl font-bold font-display text-[var(--text)]">
               Scanner Access
             </h1>
-            <p className="text-sm text-[var(--fg-muted)] mt-2">
-              Authorized NUST staff only. Login is event-specific and
-              device-controlled.
+            <p className="text-xs text-[var(--muted)] mt-2 font-sans">
+              Authorized NUST staff only. Login is event-specific and device-controlled.
             </p>
           </div>
+
           {authDisabled && (
-            <p className="text-xs section-subtitle">
-              Local mode: auth disabled, scanner login optional.
+            <p className="text-xs font-mono text-[var(--verified)] text-center uppercase tracking-wider">
+              ⌐ Local mode: auth optional ¬
             </p>
           )}
+
           {todaysEvent && (
             <button
               type="button"
-              className="btn-secondary w-full py-2 text-sm"
+              className="btn-secondary w-full py-2.5 text-xs flex items-center justify-center gap-2"
               onClick={() => setSelectedEventId(todaysEvent.id)}
             >
               <CalendarCheck2 className="h-4 w-4" />
-              Join today&apos;s event: {todaysEvent.name}
+              Today&apos;s event: {todaysEvent.name}
             </button>
           )}
-          <div className="space-y-3 relative z-10 w-full">
-            <select
-              title="Event"
-              value={selectedEventId}
-              onChange={(event) => setSelectedEventId(event.target.value)}
-              className="field rounded-xl font-medium"
-            >
-              <option value="">Select an event to begin</option>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.society_name ? `${event.society_name} • ` : ""}
-                  {event.name}
-                </option>
-              ))}
-            </select>
 
-            <div className="relative">
-              <input
-                title="Event scanner code"
-                placeholder="Enter scanner secure code"
-                type="password"
-                value={scannerCode}
-                onChange={(event) => setScannerCode(event.target.value)}
-                className="field rounded-xl pl-10 tracking-widest font-mono text-sm"
-              />
-              <Fingerprint className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+          <div className="space-y-4">
+            <div>
+              <label className="section-label block mb-1">Select Event</label>
+              <select
+                title="Event"
+                value={selectedEventId}
+                onChange={(event) => setSelectedEventId(event.target.value)}
+                className="select"
+              >
+                <option value="">Select an event to begin</option>
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.society_name ? `${event.society_name} • ` : ""}
+                    {event.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="pt-2 text-center text-[10px] text-[var(--fg-muted)] flex items-center justify-center gap-1.5 opacity-60 bg-[var(--fg)]/5 py-1.5 rounded-md">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div>
+              <label className="section-label block mb-1">Secure Code</label>
+              <div className="relative">
+                <input
+                  title="Event scanner code"
+                  placeholder="Enter scanner secure code"
+                  type="password"
+                  value={scannerCode}
+                  onChange={(event) => setScannerCode(event.target.value)}
+                  className="field pl-10 font-mono text-sm"
+                />
+                <Fingerprint className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              </div>
+            </div>
+
+            <div className="pt-2 text-center text-[10px] text-[var(--muted)] flex items-center justify-center gap-1.5 opacity-80 font-mono">
               Device ID:{" "}
               <span className="font-mono">
                 {deviceId ? deviceId.split("-")[0] + "..." : "initializing..."}
@@ -427,7 +394,7 @@ export default function ScanPage() {
 
             <button
               onClick={loginScanner}
-              className="w-full py-3.5 mt-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-[var(--foreground)] rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2"
+              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
             >
               Initialize Scanner
             </button>
@@ -437,117 +404,110 @@ export default function ScanPage() {
     );
   }
 
-  const handleNextScan = () => {
-    setScanResult(null);
-    if (scannerRef.current) {
-      scannerRef.current.resume();
-    }
-  };
-
   return (
-    <div className="app-shell flex flex-col items-center p-4 relative overflow-hidden">
-      <div className="pulse-orb h-52 w-52 right-[-2rem] top-[3rem] bg-cyan-400/60" />
-      <div className="w-full max-w-md">
+    <div className="app-shell flex flex-col items-center p-4 min-h-screen">
+      <div className="w-full max-w-md space-y-6">
         <BackButton href="/" label="Back" />
-        <div className="glass-panel p-6 mb-4 text-center">
-          <h1 className="text-3xl font-bold">Gate Scanner</h1>
-          <p className="text-center text-sm section-subtitle mt-2">
-            NUST multi-event verification terminal
+
+        <div className="block-card p-6 text-center space-y-3 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+          <h1 className="text-3xl font-display font-medium">Gate Scanner</h1>
+          <p className="text-xs font-mono text-[var(--muted)] uppercase tracking-wider">
+            NUST Multi-Event Verification Terminal
           </p>
-          <div className="chip mt-3 mx-auto w-fit">
-            Queued offline scans: {queuedCount}
+
+          <div className="flex justify-center gap-2">
+            <span className="stamp-badge neutral">
+              Queued offline scans: {queuedCount}
+            </span>
           </div>
         </div>
 
-        <p className="text-center text-sm section-subtitle mb-4">
-          Queued offline scans: {queuedCount}
-        </p>
-        <button
-          onClick={() => {
-            localStorage.removeItem("scanner_token");
-            localStorage.removeItem("scanner_event_id");
-            setScannerToken(null);
-          }}
-          className="btn-secondary w-full mb-4 py-2 text-sm"
-        >
-          Logout Scanner
-        </button>
-
-        <div className="glass-soft border border-[var(--border)] flex rounded-lg p-1 mb-6">
+        <div className="flex gap-2">
           <button
-            className={`flex-1 py-3 rounded-md font-bold text-lg transition-colors ${
+            className={`flex-1 py-3 font-mono font-bold text-sm tracking-wider transition-colors border ${
               scanType === "entry"
-                ? "bg-[var(--primary)] text-[var(--foreground)]"
-                : "section-subtitle"
+                ? "bg-[var(--verified)] text-white border-[var(--verified)]"
+                : "bg-transparent text-[var(--text)] border-[var(--border)] hover:border-[var(--verified)]"
             }`}
             onClick={() => setScanType("entry")}
           >
-            ENTRY
+            ENTRY MODE
           </button>
           <button
-            className={`flex-1 py-3 rounded-md font-bold text-lg transition-colors ${
+            className={`flex-1 py-3 font-mono font-bold text-sm tracking-wider transition-colors border ${
               scanType === "exit"
-                ? "bg-orange-500 text-[var(--foreground)]"
-                : "section-subtitle"
+                ? "bg-[var(--alert)] text-white border-[var(--alert)]"
+                : "bg-transparent text-[var(--text)] border-[var(--border)] hover:border-[var(--alert)]"
             }`}
             onClick={() => setScanType("exit")}
           >
-            EXIT
+            EXIT MODE
           </button>
         </div>
 
         {!scanning ? (
           <button
             onClick={() => setScanning(true)}
-            className="btn-primary w-full py-4 rounded-xl font-bold text-xl flex items-center justify-center"
+            className="btn-primary w-full py-5 text-lg flex items-center justify-center gap-2"
           >
-            <Camera className="mr-2" /> Start Scanner
+            <Camera className="w-5 h-5" /> Start Scanner Camera
           </button>
         ) : (
-          <div className="glass-panel rounded-xl overflow-hidden">
-            <div id="reader" className="w-full"></div>
+          <div className="block-card p-2 relative overflow-hidden border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+            <div className="absolute top-2 left-2 z-10">
+              <span className="tag-live">Active</span>
+            </div>
+            <div id="reader" className="w-full overflow-hidden"></div>
           </div>
         )}
 
-        {scanResult && (
-          <div className="fixed inset-0 bg-background/90 flex items-center justify-center p-4 z-50">
-            <div
-              className={`w-full max-w-sm rounded-2xl p-6 text-center ${
-                scanResult.status === "success"
-                  ? scanType === "exit"
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
-                  : scanResult.message.toLowerCase().includes("already")
-                    ? "bg-yellow-500"
-                    : scanResult.message
-                          .toLowerCase()
-                          .includes("offline queued")
-                      ? "bg-orange-500"
-                      : "bg-red-500"
-              }`}
-            >
-              {scanResult.status === "success" ? (
-                <CheckCircle className="w-24 h-24 mx-auto text-[var(--foreground)] mb-4" />
-              ) : (
-                <XCircle className="w-24 h-24 mx-auto text-[var(--foreground)] mb-4" />
-              )}
+        <button
+          onClick={() => {
+            localStorage.removeItem("scanner_token");
+            localStorage.removeItem("scanner_event_id");
+            setScannerToken(null);
+          }}
+          className="btn-secondary w-full py-3 flex items-center justify-center gap-2"
+        >
+          Logout Terminal
+        </button>
 
-              <h2 className="text-3xl font-black text-[var(--foreground)] mb-2">
-                {scanResult.status === "success" ? "VALID" : "DENIED"}
+        {scanResult && (
+          <div className="fixed inset-0 bg-[var(--bg)]/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="w-full max-w-sm block-card p-6 space-y-6 text-center border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+              <div>
+                {scanResult.status === "success" ? (
+                  <span className="stamp-badge verified text-xs font-bold py-3 px-6">
+                    <CheckCircle className="w-4 h-4" />
+                    {scanType === "exit" ? "EXIT SCANNED" : "ENTRY VERIFIED"}
+                  </span>
+                ) : (
+                  <span className="stamp-badge alert text-xs font-bold py-3 px-6">
+                    <XCircle className="w-4 h-4" />
+                    ACCESS DENIED
+                  </span>
+                )}
+              </div>
+
+              <h2 className="text-xl font-bold font-display">
+                {scanResult.status === "success" ? "Valid Ticket" : "Invalid Ticket"}
               </h2>
-              <p className="text-[var(--foreground)]/90 text-lg font-medium mb-6">
+
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
                 {scanResult.message}
               </p>
 
               {scanResult.ticket && (
-                <div className="bg-[var(--foreground)]/10 rounded-xl p-4 text-left mb-6 text-[var(--foreground)]">
-                  <p className="font-bold text-xl">
+                <div className="bg-[var(--surface-2)] border border-[var(--border)] p-4 text-left space-y-2">
+                  <p className="font-display font-medium text-lg">
                     {scanResult.ticket.holder_name}
                   </p>
-                  <p className="text-sm opacity-90">
-                    {scanResult.ticket.ticket_type} • {scanResult.ticket.role}
-                  </p>
-                  <div className="mt-2 flex justify-between text-sm font-bold">
+                  <div className="font-mono text-xs text-[var(--muted)] space-y-1">
+                    <p>Tier: {scanResult.ticket.ticket_type}</p>
+                    <p>Role: {scanResult.ticket.role}</p>
+                    {scanResult.ticket.seat && <p>Seat: {scanResult.ticket.seat}</p>}
+                  </div>
+                  <div className="pt-2 border-t border-[var(--border)] flex justify-between font-mono text-xs text-[var(--muted)]">
                     <span>Entries: {scanResult.ticket.entry_count}</span>
                     <span>Exits: {scanResult.ticket.exit_count}</span>
                   </div>
@@ -556,9 +516,9 @@ export default function ScanPage() {
 
               <button
                 onClick={handleNextScan}
-                className="w-full bg-[var(--foreground)] text-[var(--background)] py-4 rounded-xl font-bold text-xl"
+                className="btn-primary w-full py-4 text-base"
               >
-                Scan Next
+                Scan Next Ticket
               </button>
             </div>
           </div>

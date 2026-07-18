@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import BackButton from "@/app/back-button";
 import { API_BASE, authHeaders } from "@/lib/api";
 import { EventItem, VenueAnalyticsPoint } from "@/lib/types";
-import { motion } from "framer-motion";
 import { CalendarPlus, ExternalLink } from "lucide-react";
 
 type EventStats = { issued: number; entries: number; exits: number };
@@ -146,120 +145,85 @@ export default function CalendarPage() {
   );
 
   return (
-    <div className="app-shell p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="glass-panel p-6">
-          <BackButton href="/" label="Back" />
-          <h1 className="section-title">NUST Event Calendar & Capacity</h1>
-          <p className="section-subtitle mt-2">
+    <div className="app-shell">
+      <div className="wrap py-10">
+        <BackButton href="/" label="Back to Home" />
+
+        <div className="my-8">
+          <div className="eyebrow">
+            <span className="line"></span> Discovery
+          </div>
+          <h1 className="section-title">NUST Event Calendar</h1>
+          <p className="section-subtitle mt-4 max-w-2xl">
             Discover society, department, and individual events. Quick occupancy
             insights help security and attendees choose events.
           </p>
           <input
             title="Search events"
-            placeholder="Search by event, society, department, or venue"
-            className="field mt-4"
+            placeholder="Search by event, society, department, or venue..."
+            className="field mt-6 max-w-md"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-4">
-          <div className="glass-panel p-5">
-            <h2 className="text-xl font-bold mb-3">Calendar list</h2>
-            <div className="space-y-3 max-h-[32rem] overflow-auto">
-              {filtered.map((event, _idx) => {
+        <div className="grid lg:grid-cols-12 gap-12 mt-12">
+          {/* Main Events List */}
+          <div className="lg:col-span-7">
+            <div className="section-label mb-6">Upcoming</div>
+            
+            <div className="space-y-0">
+              {filtered.map((event) => {
                 const stat = stats[event.id] ?? {
                   issued: 0,
                   entries: 0,
                   exits: 0,
                 };
-                const capacity = event.capacity ?? 0;
-                const fillPct =
-                  capacity > 0
-                    ? Math.min(100, Math.round((stat.entries / capacity) * 100))
-                    : 0;
+                
+                const d = new Date(event.starts_at);
+                const day = d.getDate();
+                const month = d.toLocaleString('default', { month: 'short' }).toUpperCase();
+
+                const isLive = stat.entries > 0;
+
                 return (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: _idx * 0.05 }}
-                    whileHover={{ scale: 1.01 }}
-                    key={event.id}
-                    className="glass-soft border border-[var(--border)] rounded-xl p-3"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-bold">{event.name}</p>
-                      <span className="chip">
-                        {event.organizer_type ?? "society"}
-                      </span>
+                  <div key={event.id} className="event-row">
+                    <div className="ev-date">
+                      <span className="big">{day}</span>
+                      {month}
                     </div>
-                    <p className="text-xs section-subtitle mt-1">
-                      {event.society_name ?? "Independent"} • {event.venue}
-                    </p>
-                    <p className="text-xs section-subtitle">
-                      {new Date(event.starts_at).toLocaleString()}
-                    </p>
-                    <p className="text-xs section-subtitle mt-1">
-                      Issued: {stat.issued} • Inside/entered: {stat.entries} •
-                      Exits: {stat.exits}
-                    </p>
-                    {capacity > 0 && (
-                      <p className="text-xs section-subtitle">
-                        Capacity: {capacity} • Fill: {fillPct}%
-                      </p>
-                    )}
-                    <p className="text-xs section-subtitle mt-1">
-                      Prices: Early Bird PKR {event.early_bird_price_pkr ?? "-"}{" "}
-                      • Default PKR {event.default_price_pkr ?? "-"} • On-Spot
-                      PKR {event.on_spot_price_pkr ?? "-"}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <a
-                        href={`/buy/${event.id}`}
-                        className="btn-secondary inline-flex px-2 py-1 text-xs"
-                      >
-                        Buy Ticket
-                      </a>
-                      {/* ── Add to Calendar ── */}
-                      <a
-                        href={makeGoogleCalUrl(event)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[var(--primary)]/10 hover:border-[var(--primary)]/40 transition-colors text-[var(--foreground)]"
-                        title="Add to Google Calendar"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Google Cal
-                      </a>
-                      <button
-                        onClick={() => downloadIcal(event)}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[var(--primary)]/10 hover:border-[var(--primary)]/40 transition-colors text-[var(--foreground)]"
-                        title="Download iCal / Apple Calendar"
-                      >
-                        <CalendarPlus className="w-3 h-3" />
-                        iCal
-                      </button>
+                    <div>
+                      <div className="ev-title flex items-center gap-3">
+                        {event.name}
+                        {isLive && <span className="tag-live">Live</span>}
+                      </div>
+                      <div className="ev-meta flex flex-wrap gap-x-4 gap-y-1">
+                        <span>{event.society_name ?? "Independent"}</span>
+                        <span>{event.venue}</span>
+                        <span>
+                          Issued: {stat.issued} • In: {stat.entries}
+                        </span>
+                      </div>
                     </div>
-                  </motion.div>
+                    <div className="flex gap-2">
+                       <a href={`/buy/${event.id}`} className="btn-secondary" style={{ padding: "8px 14px", fontSize: "11px" }}>
+                         Get Ticket
+                       </a>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="glass-panel p-5">
-            <h2 className="text-xl font-bold mb-3">
-              Campus activity heat overview
-            </h2>
-            <p className="text-sm section-subtitle mb-3">
-              Venue density is visualized below. Coordinates render on a
-              campus-style plot where available.
-            </p>
-            <div className="glass-soft border border-[var(--border)] rounded-xl p-3 mb-3">
+          {/* Sidebar Analytics */}
+          <div className="lg:col-span-5">
+            <div className="section-label mb-6">Live Heatmap</div>
+            
+            <div className="border border-[var(--border)] bg-[var(--surface)] p-1 mb-6">
               <svg
                 viewBox="0 0 100 100"
-                className="w-full h-52 rounded-lg bg-[var(--surface-strong)]"
+                className="w-full h-64 bg-[var(--surface-2)]"
               >
                 <rect x="0" y="0" width="100" height="100" fill="transparent" />
                 {plottedPoints.map((point) => {
@@ -270,14 +234,21 @@ export default function CalendarPage() {
                         cx={point.x}
                         cy={point.y}
                         r={radius}
-                        fill="var(--primary)"
-                        fillOpacity="0.7"
+                        fill="var(--verified)"
+                        fillOpacity="0.4"
+                      />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={radius / 2}
+                        fill="var(--verified)"
                       />
                       <text
-                        x={point.x + 1}
-                        y={point.y - 1}
-                        fontSize="2.8"
-                        fill="var(--foreground)"
+                        x={point.x + 2}
+                        y={point.y - 2}
+                        fontSize="2.5"
+                        fill="var(--text)"
+                        fontFamily="var(--f-mono)"
                       >
                         {point.venue.slice(0, 14)}
                       </text>
@@ -286,60 +257,23 @@ export default function CalendarPage() {
                 })}
               </svg>
             </div>
-            <div className="space-y-2">
+
+            <div className="space-y-4">
               {venueAnalytics.map((point) => (
                 <div
                   key={point.venue}
-                  className="glass-soft rounded-lg p-3 border border-[var(--border)] flex items-center justify-between"
+                  className="border-b border-[var(--border)] pb-4 last:border-0"
                 >
-                  <div>
-                    <span className="text-sm font-semibold">{point.venue}</span>
-                    <p className="text-xs section-subtitle">
-                      Events: {point.event_count} • Issued: {point.total_issued}
-                    </p>
-                    {(point.venue_lat || point.venue_lng) && (
-                      <p className="text-[10px] section-subtitle">
-                        Lat/Lng: {point.venue_lat || "-"},{" "}
-                        {point.venue_lng || "-"}
-                      </p>
-                    )}
-                    {(() => {
-                      const ratio = Math.min(
-                        100,
-                        (point.total_entries / maxEntries) * 100,
-                      );
-                      const widthClass =
-                        ratio >= 90
-                          ? "w-full"
-                          : ratio >= 80
-                            ? "w-10/12"
-                            : ratio >= 70
-                              ? "w-9/12"
-                              : ratio >= 60
-                                ? "w-8/12"
-                                : ratio >= 50
-                                  ? "w-7/12"
-                                  : ratio >= 40
-                                    ? "w-6/12"
-                                    : ratio >= 30
-                                      ? "w-5/12"
-                                      : ratio >= 20
-                                        ? "w-4/12"
-                                        : ratio >= 10
-                                          ? "w-3/12"
-                                          : "w-2/12";
-                      return (
-                        <div className="mt-1 h-1.5 w-44 rounded-full bg-[var(--surface-strong)] border border-[var(--border)]">
-                          <div
-                            className={`h-full rounded-full bg-[var(--primary)] ${widthClass}`}
-                          />
-                        </div>
-                      );
-                    })()}
+                  <div className="flex justify-between items-baseline mb-1">
+                    <span className="font-mono text-[13px] font-semibold">{point.venue}</span>
+                    <span className="text-[11px] font-mono text-[var(--verified)]">
+                      {point.total_entries} Active
+                    </span>
                   </div>
-                  <span className="chip">
-                    {point.total_entries} active entries
-                  </span>
+                  <div className="text-[11px] font-mono text-[var(--muted)] flex justify-between">
+                    <span>Events: {point.event_count}</span>
+                    <span>Issued: {point.total_issued}</span>
+                  </div>
                 </div>
               ))}
             </div>

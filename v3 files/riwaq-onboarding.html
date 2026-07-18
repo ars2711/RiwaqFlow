@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · Riwaq</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@600&display=swap');
+
+html[data-theme="dark"]{
+  --bg:#0D1117; --surface:#161B22; --surface-2:#1D2430;
+  --text:#ECE3D0; --muted:#9CA3AF; --border:rgba(236,227,208,.14);
+  --verified:#3FA37D; --alert:#D9684E; --brass:#C9A04B;
+}
+html[data-theme="light"]{
+  --bg:#F3ECDC; --surface:#EAE0C9; --surface-2:#E2D6BB;
+  --text:#1C3344; --muted:#5C5648; --border:rgba(28,51,68,.18);
+  --verified:#146353; --alert:#8C3A2E; --brass:#A9823C;
+}
+:root{
+  --paper:#F3ECDC; --paper-ink:#1C3344; --paper-muted:#5C5648;
+  --cta-bg:#1B6B52; --cta-text:#F7F2E4;
+  --f-display:'Fraunces',serif; --f-body:'Archivo',sans-serif;
+  --f-mono:'IBM Plex Mono',monospace; --f-urdu:'Noto Nastaliq Urdu',serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--f-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s;min-height:100vh;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+button,input{font-family:inherit;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-text{font-family:var(--f-display);font-weight:600;font-size:17px;}
+.theme-toggle{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:7px 12px;cursor:pointer;font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text);min-height:36px;}
+.theme-toggle:hover{border-color:var(--verified);}
+.theme-toggle:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+
+.stage{display:flex;justify-content:center;padding:24px 20px 60px;}
+.auth-card{width:100%;max-width:440px;}
+
+.mode-tabs{display:flex;gap:0;border:1px solid var(--border);margin-bottom:28px;}
+.mode-tab{flex:1;background:var(--surface);border:none;color:var(--muted);font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:13px 0;cursor:pointer;min-height:44px;}
+.mode-tab + .mode-tab{border-left:1px solid var(--border);}
+.mode-tab[aria-selected="true"]{color:var(--text);background:var(--surface-2);}
+.mode-tab:focus-visible{outline:2px solid var(--verified);outline-offset:-2px;}
+
+.step-progress{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.step-panel h1{font-family:var(--f-display);font-weight:500;font-size:24px;margin:0 0 8px;}
+.step-panel p.sub{font-size:13.5px;color:var(--muted);margin:0 0 26px;line-height:1.65;}
+
+.field{margin-bottom:18px;}
+.field label{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.field input[type="text"], .field input[type="email"]{
+  width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-size:14.5px;padding:13px 14px;min-height:46px;
+}
+.field input:focus-visible{outline:2px solid var(--verified);outline-offset:1px;border-color:var(--verified);}
+.domain-note{display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:11px;margin-top:8px;min-height:16px;}
+.domain-note.verified{color:var(--verified);}
+.domain-note.neutral{color:var(--muted);}
+
+.otp-row{display:flex;gap:8px;margin-bottom:8px;}
+.otp-digit{
+  width:46px;height:54px;text-align:center;font-family:var(--f-mono);font-size:20px;font-weight:600;
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+}
+.otp-digit:focus-visible{outline:2px solid var(--verified);outline-offset:1px;border-color:var(--verified);}
+.otp-meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin:14px 0 24px;}
+.resend-btn{background:none;border:none;color:var(--verified);font-family:var(--f-mono);font-size:11.5px;cursor:pointer;padding:0;}
+.resend-btn:disabled{color:var(--muted);cursor:default;}
+.otp-honesty{font-size:11px;color:var(--muted);margin:-4px 0 22px;font-style:italic;}
+
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.interest-chip{
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--f-mono);
+  font-size:11px;letter-spacing:.02em;padding:9px 13px;cursor:pointer;min-height:38px;
+}
+.interest-chip[aria-pressed="true"]{color:var(--text);border-color:var(--verified);background:var(--surface-2);}
+.interest-chip:focus-visible{outline:2px solid var(--verified);outline-offset:2px;}
+
+.btn-row{display:flex;gap:10px;margin-top:26px;}
+.btn-primary{flex:1;background:var(--cta-bg);color:var(--cta-text);font-weight:600;font-size:13.5px;padding:14px 0;border:none;font-family:var(--f-mono);letter-spacing:.02em;text-transform:uppercase;cursor:pointer;min-height:48px;}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-secondary{background:transparent;color:var(--text);font-weight:600;font-size:13.5px;padding:14px 18px;border:1px solid var(--border);font-family:var(--f-mono);letter-spacing:.02em;text-transform:uppercase;cursor:pointer;min-height:48px;}
+.btn-secondary:hover{border-color:var(--verified);color:var(--verified);}
+
+.phone-alt{margin-top:18px;text-align:center;}
+.phone-alt button{background:none;border:none;color:var(--muted);font-family:var(--f-mono);font-size:11px;cursor:pointer;text-decoration:underline;}
+.phone-alt button:disabled{text-decoration:none;cursor:default;opacity:.6;}
+
+/* ---------- Issued ID card (paper, theme-constant) ---------- */
+.id-stage{display:flex;justify-content:center;margin:8px 0 22px;}
+.id-card{
+  width:100%;background:var(--paper);color:var(--paper-ink);border:1px solid rgba(28,51,68,.2);
+  box-shadow:0 18px 50px rgba(0,0,0,.3);position:relative;overflow:hidden;
+}
+.id-letterhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:2px solid var(--paper-ink);}
+.id-brand{display:flex;align-items:center;gap:9px;}
+.id-brand .name{font-family:var(--f-display);font-weight:600;font-size:17px;}
+.id-brand .sub{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.1em;color:var(--paper-muted);text-transform:uppercase;}
+.id-doctype{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-muted);font-weight:600;text-align:right;}
+.id-body{padding:18px 20px 0;display:grid;grid-template-columns:1fr 96px;gap:16px;}
+.id-field{margin-bottom:13px;}
+.id-field .flabel{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-muted);margin-bottom:4px;}
+.id-field .fvalue{font-family:var(--f-display);font-size:16px;font-weight:500;}
+.id-roll{display:flex;gap:3px;margin-top:3px;}
+.id-roll div{width:19px;height:24px;border:1.5px solid var(--paper-ink);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-weight:600;font-size:11.5px;}
+.id-photo{position:relative;width:96px;height:96px;align-self:start;}
+.id-bracket{position:absolute;width:13px;height:13px;border-color:var(--brass);}
+.id-bracket.tl{top:0;left:0;border-top:2px solid;border-left:2px solid;}
+.id-bracket.tr{top:0;right:0;border-top:2px solid;border-right:2px solid;}
+.id-bracket.bl{bottom:0;left:0;border-bottom:2px solid;border-left:2px solid;}
+.id-bracket.br{bottom:0;right:0;border-bottom:2px solid;border-right:2px solid;}
+.id-avatar{position:absolute;inset:13px;background:var(--paper-ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:30px;font-weight:600;}
+.id-interests{padding:6px 20px 0;display:flex;flex-wrap:wrap;gap:6px;}
+.id-tag{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(28,51,68,.2);color:var(--paper-muted);padding:4px 8px;}
+.id-stub{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 20px;margin-top:8px;}
+.id-stub-text .flabel{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-muted);}
+.id-stub-text .fvalue{font-family:var(--f-display);font-size:14px;font-weight:500;}
+.id-seal{width:68px;height:68px;border-radius:50%;border:2px solid #146353;color:#146353;display:flex;align-items:center;justify-content:center;position:relative;transform:rotate(-9deg);flex-shrink:0;}
+.id-seal::before{content:'';position:absolute;inset:6px;border:1px dashed currentColor;border-radius:50%;}
+.id-seal span{font-family:var(--f-mono);font-size:6px;letter-spacing:.07em;text-align:center;line-height:1.5;text-transform:uppercase;}
+@media (prefers-reduced-motion:no-preference){.id-seal.stamp-in{animation:stamp-press .45s cubic-bezier(.2,1.6,.4,1);}}
+@keyframes stamp-press{from{transform:rotate(-9deg) scale(1.7);opacity:0;}to{transform:rotate(-9deg) scale(1);opacity:1;}}
+
+footer{padding:30px 0 0;text-align:center;}
+footer .urdu{font-family:var(--f-urdu);font-size:16px;color:var(--text);margin-bottom:5px;}
+footer p{font-family:var(--f-mono);font-size:10px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="riwaq-landing-page-v3.html" style="text-decoration:none;">
+    <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M4 34 L4 18 A6 6 0 0 1 16 18 L16 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/>
+      <path d="M14 34 L14 18 A6 6 0 0 1 26 18 L26 34 Z" fill="currentColor" style="color:var(--text)"/>
+      <path d="M24 34 L24 18 A6 6 0 0 1 36 18 L36 34 Z" fill="currentColor" opacity="0.35" style="color:var(--text)"/>
+      <circle cx="20" cy="14" r="2" fill="#146353" style="fill:var(--verified)"/>
+    </svg>
+    <span class="brand-text">Riwaq</span>
+  </a>
+  <button class="theme-toggle" id="theme-toggle" aria-pressed="false">
+    <span id="theme-toggle-label">Dark mode</span>
+  </button>
+</div>
+
+<div class="stage">
+  <div class="auth-card">
+
+    <div class="mode-tabs" role="tablist" aria-label="Sign in or create account">
+      <button class="mode-tab" id="tab-signup" role="tab" aria-selected="true" data-mode="signup">Create account</button>
+      <button class="mode-tab" id="tab-signin" role="tab" aria-selected="false" data-mode="signin">Sign in</button>
+    </div>
+
+    <div id="step-progress" class="step-progress"></div>
+    <div id="step-announce" class="sr-only" role="status" aria-live="polite"></div>
+
+    <div id="step-panel" class="step-panel"></div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="urdu">رواق</div>
+  <p>RIWAQ &middot; NUST H-12 &middot; ACCOUNT</p>
+</footer>
+
+<script>
+/* ---------------- Theme ---------------- */
+const toggle=document.getElementById('theme-toggle');
+const toggleLabel=document.getElementById('theme-toggle-label');
+let theme=(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+  toggle.setAttribute('aria-pressed', String(theme==='light'));
+  toggleLabel.textContent = theme==='light' ? 'Light mode' : 'Dark mode';
+}
+toggle.addEventListener('click', ()=>{ theme = theme==='dark'?'light':'dark'; applyTheme(); });
+applyTheme();
+
+/* ---------------- State ---------------- */
+let mode='signup';     // signup | signin
+let step=0;
+let userEmail='';
+let userName='';
+let interests=[];
+const INTEREST_OPTIONS=[
+  ['tech_professional','Tech & professional'],
+  ['academic_literary','Academic & literary'],
+  ['arts_culture','Arts & culture'],
+  ['sports_adventure','Sports & adventure'],
+  ['community_governance','Community & governance']
+];
+
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
+function rollDigits(seed,n){
+  const h=hashStr(seed).toString().padStart(n,'0');
+  return h.slice(0,n).split('').map(d=>`<div>${d}</div>`).join('');
+}
+function initials(name){
+  const parts=name.trim().split(/\s+/).filter(Boolean);
+  if(parts.length===0) return '?';
+  return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+}
+
+const SIGNUP_STEPS=['email','otp','profile','issued'];
+const SIGNIN_STEPS=['email','otp','welcome'];
+
+function currentSteps(){ return mode==='signup' ? SIGNUP_STEPS : SIGNIN_STEPS; }
+
+function renderProgress(){
+  const steps=currentSteps();
+  document.getElementById('step-progress').textContent = `Step ${step+1} of ${steps.length}`;
+}
+
+function goStep(delta){
+  step = Math.max(0, Math.min(currentSteps().length-1, step+delta));
+  renderStep();
+}
+
+function focusFirstInput(){
+  const el=document.querySelector('#step-panel input, #step-panel button:not(.btn-secondary)');
+  if(el) el.focus();
+}
+
+/* ---------------- Renderers per step ---------------- */
+function renderEmailStep(){
+  const panel=document.getElementById('step-panel');
+  panel.innerHTML=`
+    <h1>${mode==='signup' ? 'Create your Riwaq ID' : 'Welcome back'}</h1>
+    <p class="sub">${mode==='signup' ? 'Use your NUST email to get verified-student status instantly, or continue with any email.' : 'Sign in with the email you used to create your Riwaq ID.'}</p>
+    <div class="field">
+      <label for="email-input">Email address</label>
+      <input type="email" id="email-input" placeholder="you@nust.edu.pk" value="${userEmail}" autocomplete="email">
+      <div class="domain-note" id="domain-note"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="email-continue" disabled>Continue</button>
+    </div>
+    ${mode==='signup' ? `<div class="phone-alt"><button disabled title="Coming soon">Use phone number instead — Soon</button></div>` : ''}
+  `;
+  const input=document.getElementById('email-input');
+  const note=document.getElementById('domain-note');
+  const continueBtn=document.getElementById('email-continue');
+  function checkEmail(){
+    const val=input.value.trim();
+    const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    continueBtn.disabled=!valid;
+    if(!val){ note.textContent=''; note.className='domain-note'; return; }
+    if(val.toLowerCase().endsWith('@nust.edu.pk')){
+      note.innerHTML='&#10003; NUST verified domain — you\'ll be marked as a verified student';
+      note.className='domain-note verified';
+    } else if(valid){
+      note.textContent="We'll mark your account unverified until your campus joins Riwaq";
+      note.className='domain-note neutral';
+    } else {
+      note.textContent='';
+      note.className='domain-note';
+    }
+  }
+  input.addEventListener('input', checkEmail);
+  checkEmail();
+  continueBtn.addEventListener('click', ()=>{ userEmail=input.value.trim(); goStep(1); });
+  focusFirstInput();
+}
+
+function renderOtpStep(){
+  const panel=document.getElementById('step-panel');
+  panel.innerHTML=`
+    <h1>Enter the code</h1>
+    <p class="sub">We sent a 6-digit code to <strong>${userEmail||'your email'}</strong>.</p>
+    <div class="otp-row" role="group" aria-label="6 digit verification code">
+      ${[0,1,2,3,4,5].map(i=>`<input class="otp-digit" id="otp-${i}" inputmode="numeric" maxlength="1" aria-label="Digit ${i+1} of 6">`).join('')}
+    </div>
+    <div class="otp-meta">
+      <span id="resend-label">Resend code in 28s</span>
+      <button class="resend-btn" id="resend-btn" disabled>Resend</button>
+    </div>
+    <p class="otp-honesty">Demo verification — any 6 digits will continue, since there's no live backend yet.</p>
+    <div class="btn-row">
+      <button class="btn-secondary" id="otp-back">Back</button>
+      <button class="btn-primary" id="otp-continue" disabled>Verify</button>
+    </div>
+  `;
+  const boxes=[0,1,2,3,4,5].map(i=>document.getElementById('otp-'+i));
+  const continueBtn=document.getElementById('otp-continue');
+  function checkComplete(){
+    continueBtn.disabled = !boxes.every(b=>b.value.length===1);
+  }
+  boxes.forEach((b,i)=>{
+    b.addEventListener('input', ()=>{
+      b.value=b.value.replace(/[^0-9]/g,'').slice(0,1);
+      if(b.value && boxes[i+1]) boxes[i+1].focus();
+      checkComplete();
+    });
+    b.addEventListener('keydown', e=>{
+      if(e.key==='Backspace' && !b.value && boxes[i-1]) boxes[i-1].focus();
+    });
+  });
+  document.getElementById('otp-back').addEventListener('click', ()=>goStep(-1));
+  continueBtn.addEventListener('click', ()=>goStep(1));
+
+  let seconds=28;
+  const label=document.getElementById('resend-label');
+  const resendBtn=document.getElementById('resend-btn');
+  const timer=setInterval(()=>{
+    seconds--;
+    if(seconds<=0){
+      clearInterval(timer);
+      label.textContent='';
+      resendBtn.disabled=false;
+      resendBtn.textContent='Resend code';
+    } else {
+      label.textContent=`Resend code in ${seconds}s`;
+    }
+  },1000);
+  focusFirstInput();
+}
+
+function renderProfileStep(){
+  const panel=document.getElementById('step-panel');
+  panel.innerHTML=`
+    <h1>A little about you</h1>
+    <p class="sub">This shapes what Riwaq surfaces first — nothing here is locked in.</p>
+    <div class="field">
+      <label for="name-input">Full name</label>
+      <input type="text" id="name-input" placeholder="e.g. Arsalan Khan" value="${userName}" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>What are you into?</label>
+      <div class="chip-grid" id="chip-grid"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="profile-back">Back</button>
+      <button class="btn-primary" id="profile-continue" disabled>Issue my Riwaq ID</button>
+    </div>
+  `;
+  const grid=document.getElementById('chip-grid');
+  grid.innerHTML=INTEREST_OPTIONS.map(([id,label])=>
+    `<button class="interest-chip" data-id="${id}" aria-pressed="${interests.includes(id)}">${label}</button>`
+  ).join('');
+  grid.querySelectorAll('.interest-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const id=chip.dataset.id;
+      if(interests.includes(id)) interests=interests.filter(x=>x!==id);
+      else interests.push(id);
+      chip.setAttribute('aria-pressed', String(interests.includes(id)));
+    });
+  });
+  const nameInput=document.getElementById('name-input');
+  const continueBtn=document.getElementById('profile-continue');
+  function check(){ continueBtn.disabled = nameInput.value.trim().length<2; }
+  nameInput.addEventListener('input', check);
+  check();
+  document.getElementById('profile-back').addEventListener('click', ()=>goStep(-1));
+  continueBtn.addEventListener('click', ()=>{ userName=nameInput.value.trim(); goStep(1); });
+  focusFirstInput();
+}
+
+function renderIssuedStep(){
+  const panel=document.getElementById('step-panel');
+  const interestLabels=INTEREST_OPTIONS.filter(([id])=>interests.includes(id)).map(([,l])=>l);
+  panel.innerHTML=`
+    <h1>Your Riwaq ID is issued</h1>
+    <p class="sub">This is what societies and gate scanners will see — kept on this device, same way every Riwaq ticket works.</p>
+    <div class="id-stage">
+      <div class="id-card">
+        <div class="id-letterhead">
+          <div class="id-brand">
+            <svg width="20" height="20" viewBox="0 0 40 40"><path d="M4 34 L4 18 A6 6 0 0 1 16 18 L16 34 Z" fill="#1C3344" opacity="0.35"/><path d="M14 34 L14 18 A6 6 0 0 1 26 18 L26 34 Z" fill="#1C3344"/><path d="M24 34 L24 18 A6 6 0 0 1 36 18 L36 34 Z" fill="#1C3344" opacity="0.35"/><circle cx="20" cy="14" r="2" fill="#146353"/></svg>
+            <div><div class="name">Riwaq</div><div class="sub">NUST H-12</div></div>
+          </div>
+          <div class="id-doctype">Member Identification</div>
+        </div>
+        <div class="id-body">
+          <div>
+            <div class="id-field"><div class="flabel">Name</div><div class="fvalue">${userName||'—'}</div></div>
+            <div class="id-field"><div class="flabel">Member no.</div><div class="id-roll">${rollDigits(userEmail||userName,6)}</div></div>
+          </div>
+          <div class="id-photo">
+            <div class="id-avatar">${initials(userName)}</div>
+            <div class="id-bracket tl"></div><div class="id-bracket tr"></div>
+            <div class="id-bracket bl"></div><div class="id-bracket br"></div>
+          </div>
+        </div>
+        <div class="id-interests">
+          ${interestLabels.length ? interestLabels.map(l=>`<span class="id-tag">${l}</span>`).join('') : `<span class="id-tag">General member</span>`}
+        </div>
+        <div class="id-stub">
+          <div class="id-stub-text">
+            <div class="flabel">Status</div>
+            <div class="fvalue">${userEmail.toLowerCase().endsWith('@nust.edu.pk') ? 'NUST verified' : 'Unverified email'}</div>
+          </div>
+          <div class="id-seal stamp-in"><span>Issued<br>&middot; Riwaq &middot;<br>Genuine</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="finish-btn">Continue to Riwaq</button>
+    </div>
+  `;
+}
+
+function renderWelcomeStep(){
+  const panel=document.getElementById('step-panel');
+  panel.innerHTML=`
+    <h1>Welcome back${userName?', '+userName.split(' ')[0]:''}</h1>
+    <p class="sub">Signed in as <strong>${userEmail||'your account'}</strong>. Your tickets and saved societies are waiting.</p>
+    <div class="btn-row">
+      <button class="btn-primary" id="finish-btn">Continue to Riwaq</button>
+    </div>
+  `;
+}
+
+const RENDERERS={email:renderEmailStep, otp:renderOtpStep, profile:renderProfileStep, issued:renderIssuedStep, welcome:renderWelcomeStep};
+
+function renderStep(){
+  renderProgress();
+  const stepName=currentSteps()[step];
+  RENDERERS[stepName]();
+  document.getElementById('step-announce').textContent = `Step ${step+1} of ${currentSteps().length}: ${stepName}`;
+  const finishBtn=document.getElementById('finish-btn');
+  if(finishBtn) finishBtn.addEventListener('click', ()=>{
+    window.location.href='riwaq-landing-page-v3.html';
+  });
+}
+
+/* ---------------- Mode tabs ---------------- */
+document.getElementById('tab-signup').addEventListener('click', ()=>{ mode='signup'; step=0; updateTabs(); renderStep(); });
+document.getElementById('tab-signin').addEventListener('click', ()=>{ mode='signin'; step=0; updateTabs(); renderStep(); });
+function updateTabs(){
+  document.getElementById('tab-signup').setAttribute('aria-selected', String(mode==='signup'));
+  document.getElementById('tab-signin').setAttribute('aria-selected', String(mode==='signin'));
+}
+
+updateTabs();
+renderStep();
+</script>
+</body>
+</html>

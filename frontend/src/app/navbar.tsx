@@ -6,40 +6,25 @@ import { RiwaqLogo } from "@/components/ui/Logo";
 import ThemeToggle from "./theme-toggle";
 
 const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/calendar", label: "Explore" },
-  { href: "/map", label: "Map" },
+  { href: "/calendar", label: "Events" },
+  { href: "/map", label: "Campus pulse" },
   { href: "/societies", label: "Societies" },
-  { href: "/network", label: "Network" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/admin", label: "Admin" },
-  { href: "/scan", label: "Scanner" },
+  { href: "/admin", label: "Admin", hideMobile: true },
+  { href: "/scan", label: "Scanner", hideMobile: true },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="site-nav-wrap">
-      <nav className="site-nav glass-panel" aria-label="Primary">
-        <Link href="/" className="site-logo" aria-label="Riwaq home">
-          <span className="site-logo-mark" aria-hidden>
-            <RiwaqLogo className="h-6 w-6" />
-          </span>
-          <span className="site-logo-text flex items-center gap-2">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent-violet)] font-black tracking-tight">
-              Riwaq
-            </span>
-            <span
-              className="arabic-riwaq-sm text-base leading-none"
-              aria-label="رواق"
-            >
-              رواق
-            </span>
-          </span>
+    <header className="topbar">
+      <div className="topbar-inner">
+        <Link href="/" className="brand" aria-label="Riwaq home">
+          <RiwaqLogo className="h-[26px] w-[26px]" />
+          <span className="brand-text">Riwaq</span>
         </Link>
 
-        <div className="site-nav-links">
+        <nav className="nav-links" aria-label="Primary">
           {navItems.map((item) => {
             const active =
               pathname === item.href ||
@@ -48,18 +33,16 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`site-nav-link ${active ? "active" : ""}`}
+                className={`${active ? "active" : ""} ${item.hideMobile ? "hide-mobile" : ""}`}
               >
                 {item.label}
               </Link>
             );
           })}
-        </div>
+        </nav>
 
-        <div className="site-nav-actions">
-          <ThemeToggle />
-        </div>
-      </nav>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

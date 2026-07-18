@@ -10,26 +10,14 @@ import {
   RefreshCw,
   ShieldCheck,
   Sun,
-  Zap,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  MapPin,
-  User,
-  Hash,
-  Tag,
-  UserCheck,
-  BookOpen,
-  LogIn,
-  LogOut,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE } from "@/lib/api";
 import { EventItem, TicketItem } from "@/lib/types";
 import BackButton from "@/app/back-button";
 import { UniversalWalletGroup } from "@/components/wallet/WalletButtons";
+import { AnimatePresence } from "framer-motion";
 
 type TicketFull = {
   ticket: TicketItem;
@@ -125,7 +113,6 @@ export default function TicketPage() {
       const res = await fetch(`${API_BASE}/tickets/${ticketId}/wallet-links`);
       if (!res.ok) return;
       const payload: WalletLinks = await res.json();
-      // Resolve relative URLs returned by the backend
       if (payload.apple_wallet_url?.startsWith("/")) {
         payload.apple_wallet_url = `${API_BASE}${payload.apple_wallet_url}`;
       }
@@ -203,10 +190,12 @@ export default function TicketPage() {
   if (error && !data) {
     return (
       <div className="app-shell flex flex-col items-center justify-center p-4">
-        <div className="glass-panel w-full max-w-md p-8 text-center">
-          <AlertCircle className="w-14 h-14 text-[var(--danger)] mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="section-subtitle text-center">{error}</p>
+        <div className="border border-[var(--alert)] bg-[var(--alert)]/10 text-[var(--alert)] p-8 max-w-md w-full text-center">
+          <AlertCircle className="w-10 h-10 mx-auto mb-4" />
+          <h1 className="font-display font-medium text-lg mb-2">Access Denied</h1>
+          <p className="text-[10px] font-mono uppercase tracking-widest leading-relaxed">
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -215,437 +204,248 @@ export default function TicketPage() {
   if (!data) {
     return (
       <div className="app-shell flex items-center justify-center">
-        <div className="glass-panel p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]" />
+        <div className="text-[11px] font-mono text-[var(--muted)] uppercase tracking-widest border border-[var(--border)] px-4 py-3">
+          Fetching ticket...
         </div>
       </div>
     );
   }
 
   const qrValue = qrToken ? `${window.location.origin}/scan?t=${qrToken}` : "";
-
-  const statusConfig = {
-    valid: {
-      color: "from-emerald-500 to-emerald-700",
-      badge: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-      icon: <CheckCircle2 className="w-4 h-4" />,
-      label: "VALID",
-    },
-    used: {
-      color: "from-amber-500 to-amber-700",
-      badge: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-      icon: <Clock className="w-4 h-4" />,
-      label: "USED",
-    },
-    revoked: {
-      color: "from-red-600 to-red-800",
-      badge: "bg-red-500/15 text-red-400 border-red-500/30",
-      icon: <XCircle className="w-4 h-4" />,
-      label: "REVOKED",
-    },
-  };
-  const sc =
-    statusConfig[statusLabel as keyof typeof statusConfig] ??
-    statusConfig.valid;
   const maxEntries = data.ticket.ticket_type === "OC" ? null : 2;
-  const entryPct = maxEntries
-    ? Math.min((data.ticket.entry_count / maxEntries) * 100, 100)
-    : 100;
-  const getGoogleMapsLink = () => {
-    if (!data?.event.venue_lat || !data?.event.venue_lng) {
-      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data?.event.venue || "")}`;
-    }
-    return `https://www.google.com/maps/dir/?api=1&destination=${data.event.venue_lat},${data.event.venue_lng}`;
-  };
 
-  const getCalendarLink = () => {
-    if (!data?.event) return "#";
-    const start = new Date(data.event.starts_at)
-      .toISOString()
-      .replace(/-|:|\.\d+/g, "");
-    const end = new Date(data.event.ends_at)
-      .toISOString()
-      .replace(/-|:|\.\d+/g, "");
-    const url = new URL("https://calendar.google.com/calendar/render");
-    url.searchParams.append("action", "TEMPLATE");
-    url.searchParams.append("text", data.event.name);
-    url.searchParams.append("dates", `${start}/${end}`);
-    url.searchParams.append("details", data.event.description || "");
-    url.searchParams.append("location", data.event.venue || "");
-    return url.toString();
-  };
-
-  const circumference = 2 * Math.PI * 20; // r=20
-  const timerOffset = circumference - (timeLeft / 30) * circumference;
-
+  // Render physical ticket design
   return (
-    <div className="app-shell flex flex-col items-center px-4 py-6 sm:py-10 relative overflow-hidden min-h-screen">
-      {/* Ambient orbs */}
-      <div className="pulse-orb h-56 w-56 left-[-2rem] top-[4rem] bg-blue-500/60 pointer-events-none" />
-      <div className="pulse-orb h-48 w-48 right-[-2rem] bottom-[10rem] bg-cyan-400/50 pointer-events-none" />
-
-      <div className="w-full max-w-sm mb-3">
-        <BackButton href="/" label="Back" />
+    <div className="app-shell flex flex-col items-center px-4 py-6 sm:py-10">
+      <div className="w-full max-w-[540px] mb-4">
+        <BackButton href="/" label="Back to Home" />
       </div>
 
-      {/* Offline / error banner */}
-      <AnimatePresence>
-        {(error || !isOnline) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="w-full max-w-sm mb-3 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-400"
-          >
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            {error ?? "You're offline — showing cached ticket"}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── TICKET CARD ─────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
-        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative bg-[var(--surface-strong)]"
-      >
-        {/* Watermark */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden z-0 select-none">
-          <span className="text-[6rem] font-black tracking-widest opacity-[0.03] rotate-[-20deg] whitespace-nowrap">
-            RIWAQFLOW
-          </span>
+      {(error || !isOnline) && (
+        <div className="w-full max-w-[540px] mb-4 border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-[10px] font-mono uppercase text-amber-400 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error ?? "You're offline — showing cached ticket"}
         </div>
+      )}
 
-        {/* ── Header gradient ── */}
-        <div
-          className={`relative bg-gradient-to-br ${sc.color} p-6 text-white overflow-hidden`}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(255,255,255,0.18),transparent_50%)] pointer-events-none" />
-
-          {/* Society logo + status badge */}
-          <div className="relative z-10 flex items-start justify-between mb-4">
-            {data.event.logo_url ? (
-              <Image
-                src={data.event.logo_url}
-                alt="Event logo"
-                width={44}
-                height={44}
-                unoptimized
-                className="h-11 w-11 rounded-2xl object-cover border-2 border-white/30 shadow-lg"
-              />
-            ) : (
-              <div className="h-11 w-11 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-            )}
-
-            <span
-              className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${sc.badge}`}
-            >
-              {sc.icon}
-              {sc.label}
-            </span>
-          </div>
-
-          {/* Event title */}
-          <div className="relative z-10">
-            {data.event.society_name && (
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-1">
-                {data.event.society_name}
-              </p>
-            )}
-            <h1 className="text-2xl font-black leading-tight tracking-tight">
-              {data.event.name}
-            </h1>
-            <div className="mt-2 flex flex-wrap gap-3 text-sm text-white/80">
-              <a
-                href={getGoogleMapsLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-white transition-colors hover:underline decoration-white/50 underline-offset-4 cursor-pointer"
-                title="Get Directions"
-              >
-                <MapPin className="w-3.5 h-3.5" />
-                {data.event.venue}
-              </a>
-              <a
-                href={getCalendarLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-white transition-colors hover:underline decoration-white/50 underline-offset-4 cursor-pointer"
-                title="Add to Google Calendar"
-              >
-                <Clock className="w-3.5 h-3.5" />
-                {new Date(data.event.starts_at).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Tear / perforation line ── */}
-        <div className="relative flex items-center bg-[var(--surface-strong)]">
-          <div className="absolute -left-4 h-8 w-8 rounded-full bg-[var(--bg)]" />
-          <div className="absolute -right-4 h-8 w-8 rounded-full bg-[var(--bg)]" />
-          <div className="mx-6 w-full border-t-2 border-dashed border-[var(--border)]" />
-        </div>
-
-        {/* ── Holder info grid ── */}
-        <div className="px-6 pt-4 pb-5 grid grid-cols-2 gap-x-4 gap-y-3 text-sm relative z-10">
-          {[
-            {
-              icon: <User className="w-3.5 h-3.5" />,
-              label: "Holder",
-              value: data.ticket.holder_name,
-            },
-            {
-              icon: <Tag className="w-3.5 h-3.5" />,
-              label: "Type",
-              value: data.ticket.ticket_type,
-            },
-            {
-              icon: <Hash className="w-3.5 h-3.5" />,
-              label: "Seat",
-              value: data.ticket.seat || "General",
-            },
-            {
-              icon: <UserCheck className="w-3.5 h-3.5" />,
-              label: "Role",
-              value: data.ticket.role || "—",
-            },
-            {
-              icon: <BookOpen className="w-3.5 h-3.5" />,
-              label: "Dept",
-              value: data.ticket.department || "—",
-            },
-            {
-              icon: <BookOpen className="w-3.5 h-3.5" />,
-              label: "Year",
-              value: data.ticket.year || "—",
-            },
-          ].map(({ icon, label, value }) => (
-            <div key={label}>
-              <p className="flex items-center gap-1 text-[10px] uppercase tracking-wider section-subtitle font-bold mb-0.5">
-                {icon}
-                {label}
-              </p>
-              <p className="font-semibold truncate">{value}</p>
-            </div>
-          ))}
-
-          {data.ticket.interests && (
-            <div className="col-span-2">
-              <p className="text-[10px] uppercase tracking-wider section-subtitle font-bold mb-1">
-                Interests
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {data.ticket.interests.split(",").map((t) => (
-                  <span key={t} className="chip text-xs px-2 py-0.5">
-                    {t.trim()}
-                  </span>
-                ))}
+      {/* ── ADMIT CARD (Paper Ticket) ── */}
+      <div className="ticket-stage w-full">
+        <div className="admit-card relative z-10">
+          
+          {statusLabel === "revoked" && (
+            <div className="absolute inset-0 z-50 bg-[#8C3A2E]/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+              <div className="text-[4rem] font-black uppercase text-[#8C3A2E] tracking-widest border-8 border-[#8C3A2E] px-8 py-2 -rotate-[25deg] opacity-75">
+                VOID
               </div>
             </div>
           )}
-        </div>
 
-        {/* ── Tear / perforation line ── */}
-        <div className="relative flex items-center bg-[var(--surface-strong)]">
-          <div className="absolute -left-4 h-8 w-8 rounded-full bg-[var(--bg)]" />
-          <div className="absolute -right-4 h-8 w-8 rounded-full bg-[var(--bg)]" />
-          <div className="mx-6 w-full border-t-2 border-dashed border-[var(--border)]" />
-        </div>
-
-        {/* ── QR zone ── */}
-        <div className="px-6 py-6 flex flex-col items-center gap-4 relative z-10 bg-[var(--surface)]">
-          {/* QR + countdown ring */}
-          <div className="relative">
-            <div className="rounded-2xl border border-[var(--border)] bg-white p-3 shadow-lg">
-              {isOnline && qrToken ? (
-                <QRCodeSVG
-                  value={qrValue}
-                  size={180}
-                  level="H"
-                  includeMargin={false}
-                />
-              ) : (
-                <div className="w-[180px] h-[180px] bg-gray-100 rounded-xl flex items-center justify-center">
-                  <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
-                </div>
+          {statusLabel === "used" && (
+            <div className="absolute inset-0 z-50 bg-[#A9823C]/5 flex items-center justify-center pointer-events-none">
+              <div className="text-[4rem] font-black uppercase text-[#A9823C] tracking-widest border-8 border-[#A9823C] px-8 py-2 -rotate-[15deg] opacity-60">
+                USED
+              </div>
+            </div>
+          )}
+          
+          <div className="ac-letterhead">
+            <div className="ac-brand">
+              {data.event.logo_url && (
+                <Image src={data.event.logo_url} width={28} height={28} alt="Logo" unoptimized className="border border-[var(--paper-ink)]" />
               )}
-              {/* Scan line animation */}
-              <div className="absolute inset-3 overflow-hidden rounded-xl pointer-events-none">
-                <div className="absolute left-0 right-0 h-0.5 bg-[var(--primary)] opacity-60 animate-[scan_2s_ease-in-out_infinite]" />
+              <div>
+                <div className="name">{data.event.name}</div>
+                <div className="sub">{data.event.society_name || "NUST Event"}</div>
               </div>
             </div>
+            <div className="ac-doctype">
+              Admit One
+              <br />
+              <span style={{ fontSize: '7px' }}>Not Transferable</span>
+            </div>
+          </div>
 
-            {/* Countdown ring overlay — bottom right corner */}
-            {isOnline && (
-              <div className="absolute -bottom-3 -right-3 bg-[var(--surface-strong)] rounded-full border border-[var(--border)] p-0.5 shadow-md">
-                <svg width="48" height="48" className="-rotate-90">
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    fill="none"
-                    stroke="var(--border)"
-                    strokeWidth="3"
-                  />
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    fill="none"
-                    stroke={timeLeft > 10 ? "var(--primary)" : "#f59e0b"}
-                    strokeWidth="3"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={timerOffset}
-                    strokeLinecap="round"
-                    className="[transition:stroke-dashoffset_0.9s_linear]"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums">
-                  {timeLeft}s
+          <div className="ac-body">
+            <div>
+              <div className="ac-field">
+                <div className="flabel">Holder Name</div>
+                <div className="fvalue">{data.ticket.holder_name}</div>
+              </div>
+
+              <div className="ac-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <div className="flabel">Type</div>
+                  <div className="fvalue">{data.ticket.ticket_type}</div>
+                </div>
+                <div>
+                  <div className="flabel">Seat</div>
+                  <div className="fvalue">{data.ticket.seat || "GEN"}</div>
+                </div>
+              </div>
+
+              <div className="ac-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <div className="flabel">Department</div>
+                  <div className="fvalue" style={{ fontSize: '13px' }}>{data.ticket.department || "—"}</div>
+                </div>
+                <div>
+                  <div className="flabel">Year</div>
+                  <div className="fvalue" style={{ fontSize: '13px' }}>{data.ticket.year || "—"}</div>
+                </div>
+              </div>
+
+              <div className="ac-field">
+                <div className="flabel">Status</div>
+                <span className={`stamp-badge ${statusLabel === 'valid' ? 'verified' : statusLabel === 'revoked' ? 'alert' : 'neutral'}`} style={{ padding: '4px 10px', minHeight: 0 }}>
+                  <span style={{ fontSize: '9px', fontWeight: 'bold' }}>
+                    {statusLabel.toUpperCase()}
+                  </span>
                 </span>
               </div>
-            )}
-          </div>
-
-          <p className="text-xs section-subtitle flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[var(--success)]" />
-            {isOnline
-              ? "Live rotating QR — screenshots expire"
-              : "Offline: using cached data"}
-          </p>
-
-          {/* Action buttons */}
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <button
-              onClick={() => setFullQr(true)}
-              className="btn-secondary text-xs py-2 flex items-center justify-center gap-1.5"
-            >
-              <Maximize2 className="w-3.5 h-3.5" /> Full Screen
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="btn-secondary text-xs py-2 flex items-center justify-center gap-1.5"
-            >
-              <Printer className="w-3.5 h-3.5" /> Print
-            </button>
-            <button
-              onClick={() => setBright((p) => !p)}
-              className="btn-secondary text-xs py-2 flex items-center justify-center gap-1.5"
-            >
-              <Sun className="w-3.5 h-3.5" /> {bright ? "Normal" : "Brighten"}
-            </button>
-            <button
-              onClick={async () => {
-                if (!wakeLock && "wakeLock" in navigator) {
-                  try {
-                    setWakeLock(await navigator.wakeLock.request("screen"));
-                  } catch {
-                    setError("Wake lock unsupported");
-                  }
-                } else if (wakeLock) {
-                  await wakeLock.release();
-                  setWakeLock(null);
-                }
-              }}
-              className="btn-secondary text-xs py-2 flex items-center justify-center gap-1.5"
-            >
-              <BatteryCharging className="w-3.5 h-3.5" />
-              {wakeLock ? "Screen: ON" : "Keep Awake"}
-            </button>
-            {promptEvent && (
-              <button
-                className="col-span-2 btn-primary text-xs py-2 flex items-center justify-center gap-1.5"
-                onClick={async () => {
-                  await promptEvent.prompt();
-                  await promptEvent.userChoice;
-                  setPromptEvent(null);
-                }}
-              >
-                Add to Home Screen
-              </button>
-            )}
-          </div>
-
-          {walletLinks && (
-            <UniversalWalletGroup
-              appleUrl={walletLinks.apple_wallet_url}
-              googleUrl={walletLinks.google_wallet_url}
-              samsungUrl={walletLinks.samsung_wallet_url}
-              message={walletLinks.message}
-            />
-          )}
-        </div>
-
-        {/* ── Entry / Exit counters ── */}
-        <div className="px-6 py-4 border-t border-[var(--border)] grid grid-cols-2 gap-4 relative z-10 bg-[var(--surface-strong)]">
-          <div>
-            <div className="flex items-center gap-1.5 mb-1 text-xs section-subtitle font-bold uppercase tracking-wider">
-              <LogIn className="w-3.5 h-3.5 text-[var(--primary)]" /> Entries
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black">
-                {data.ticket.entry_count}
-                <span className="text-sm font-normal opacity-60">
-                  /{maxEntries ?? "∞"}
-                </span>
-              </span>
-            </div>
-            {maxEntries && (
-              <div className="mt-1.5 h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
-                <div
-                  style={{ width: `${entryPct}%` }}
-                  className={`h-full rounded-full transition-all duration-500 ${entryPct >= 100 ? "bg-amber-400" : "bg-[var(--primary)]"}`}
-                />
+
+            <div className="ac-photo">
+              <div className="bracket tl"></div>
+              <div className="bracket tr"></div>
+              <div className="bracket bl"></div>
+              <div className="bracket br"></div>
+              
+              <div className="qr-box bg-white p-1">
+                {isOnline && qrToken ? (
+                   <QRCodeSVG
+                    value={qrValue}
+                    size={110}
+                    level="H"
+                    includeMargin={false}
+                  />
+                ) : (
+                  <div className="w-[110px] h-[110px] bg-gray-100 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 mb-1 text-xs section-subtitle font-bold uppercase tracking-wider">
-              <LogOut className="w-3.5 h-3.5 text-[var(--primary)]" /> Exits
             </div>
-            <span className="text-2xl font-black">
-              {data.ticket.exit_count}
-            </span>
           </div>
-        </div>
 
-        {/* ── Serial / Signature ── */}
-        <div className="px-6 py-3 border-t border-[var(--border)] relative z-10 bg-[var(--surface-strong)]">
-          <p className="text-[10px] section-subtitle font-mono tracking-widest">
-            #{data.ticket.id.slice(0, 16).toUpperCase()}
-          </p>
-          {data.ticket.signature && (
-            <p className="text-[9px] section-subtitle break-all mt-0.5 opacity-50">
-              {data.ticket.signature}
-            </p>
-          )}
-        </div>
-      </motion.div>
+          <div className="ac-meta-row">
+            <div>
+              <strong>VENUE:</strong> {data.event.venue}
+            </div>
+            <div>
+              <strong>TIME:</strong> {new Date(data.event.starts_at).toLocaleString("en-PK", {
+                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+              })}
+            </div>
+          </div>
 
-      {/* ── Full-screen QR overlay ── */}
+          <div className="perforation">
+            {Array.from({ length: 45 }).map((_, i) => <span key={i}></span>)}
+          </div>
+
+          <div className="ac-stub">
+            <div className="stub-text" style={{ flex: 1 }}>
+              <div className="ac-field" style={{ marginBottom: '8px' }}>
+                <div className="flabel">Ticket ID</div>
+                <div className="fvalue" style={{ fontFamily: 'var(--f-mono)', fontSize: '10px' }}>
+                  {data.ticket.id.toUpperCase()}
+                </div>
+              </div>
+              <div className="ac-field" style={{ marginBottom: 0 }}>
+                <div className="flabel">Entries</div>
+                <div className="fvalue" style={{ fontFamily: 'var(--f-mono)', fontSize: '12px' }}>
+                  {data.ticket.entry_count} / {maxEntries ?? "∞"}
+                </div>
+              </div>
+            </div>
+
+            <div className="seal">
+              <div className="seal-text">
+                NUST
+                <br />
+                {data.event.society_name?.slice(0, 5) || "EVENT"}
+                <br />
+                AUTH
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── CONTROLS & WALLET (Outside of Paper Ticket) ── */}
+      <div className="w-full max-w-[540px] mt-6 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setFullQr(true)}
+          className="btn-secondary text-[10px]"
+        >
+          <Maximize2 className="w-3.5 h-3.5" /> Full Screen
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="btn-secondary text-[10px]"
+        >
+          <Printer className="w-3.5 h-3.5" /> Print Backup
+        </button>
+        <button
+          onClick={() => setBright((p) => !p)}
+          className="btn-secondary text-[10px]"
+        >
+          <Sun className="w-3.5 h-3.5" /> {bright ? "Normal" : "Brighten"}
+        </button>
+        <button
+          onClick={async () => {
+            if (!wakeLock && "wakeLock" in navigator) {
+              try { setWakeLock(await navigator.wakeLock.request("screen")); } 
+              catch { setError("Wake lock unsupported"); }
+            } else if (wakeLock) {
+              await wakeLock.release();
+              setWakeLock(null);
+            }
+          }}
+          className="btn-secondary text-[10px]"
+        >
+          <BatteryCharging className="w-3.5 h-3.5" /> {wakeLock ? "Screen: ON" : "Keep Awake"}
+        </button>
+      </div>
+
+      <div className="w-full max-w-[540px] mt-4">
+        {promptEvent && (
+          <button
+            className="w-full btn-primary text-xs py-2 mb-3"
+            onClick={async () => {
+              await promptEvent.prompt();
+              await promptEvent.userChoice;
+              setPromptEvent(null);
+            }}
+          >
+            Add to Home Screen
+          </button>
+        )}
+        
+        {walletLinks && (
+          <UniversalWalletGroup
+            appleUrl={walletLinks.apple_wallet_url}
+            googleUrl={walletLinks.google_wallet_url}
+            samsungUrl={walletLinks.samsung_wallet_url}
+            message={walletLinks.message}
+          />
+        )}
+        
+        <p className="text-[9px] font-mono uppercase text-center mt-6 text-[var(--muted)]">
+          <ShieldCheck className="w-3 h-3 inline mr-1" />
+          {isOnline ? "Live QR Code token rotates every 30s. Screenshots expire." : "Offline Mode"}
+        </p>
+      </div>
+
+      {/* ── FULL SCREEN QR OVERLAY ── */}
       <AnimatePresence>
         {fullQr && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-6"
             onClick={() => setFullQr(false)}
           >
-            <motion.div
-              initial={{ scale: 0.85 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.85 }}
-              className="bg-white p-6 rounded-3xl shadow-2xl"
+            <div
+              className="bg-white p-6 relative"
               onClick={(e) => e.stopPropagation()}
             >
               {qrToken ? (
@@ -656,11 +456,13 @@ export default function TicketPage() {
                   includeMargin={false}
                 />
               ) : (
-                <div className="w-[300px] h-[300px] bg-gray-200 rounded-2xl" />
+                <div className="w-[300px] h-[300px] bg-gray-200" />
               )}
-            </motion.div>
-            <p className="text-white/60 mt-5 text-sm">Tap anywhere to close</p>
-          </motion.div>
+            </div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-white/50 mt-6">
+              Tap anywhere to close
+            </p>
+          </div>
         )}
       </AnimatePresence>
     </div>
